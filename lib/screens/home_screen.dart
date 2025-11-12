@@ -123,19 +123,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     isSelected: _selectedFilter == 0,
                     onTap: () => setState(() => _selectedFilter = 0),
                   ),
-                  const SizedBox(width: 10),
-                  FilterChipWidget(
-                    label: 'Vols',
-                    isSelected: _selectedFilter == 1,
-                    onTap: () => setState(() => _selectedFilter = 1),
-                  ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 40),
                   FilterChipWidget(
                     label: 'Hôtels',
                     isSelected: _selectedFilter == 2,
                     onTap: () => setState(() => _selectedFilter = 2),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 40),
                   FilterChipWidget(
                     label: 'Restaurants',
                     isSelected: _selectedFilter == 3,
@@ -217,11 +211,6 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.map_outlined),
             activeIcon: Icon(Icons.map),
             label: 'Voyages',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            activeIcon: Icon(Icons.account_balance_wallet),
-            label: 'Budget',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
