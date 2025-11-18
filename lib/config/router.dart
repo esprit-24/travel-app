@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travel_app/screens/hotel_search_page.dart';
 import 'package:travel_app/screens/notification_screen.dart';
+import 'package:travel_app/screens/restaurants_screen.dart';
 import 'package:travel_app/screens/search_page.dart';
 
 // Provider d'auth
@@ -72,6 +73,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/hotels',
         builder: (context, state) => const HotelSearchPage(),
+      ),
+
+      // Route pour la page restaurants
+      GoRoute(
+        path: '/restaurants',
+        builder: (context, state) => const RestaurantsPage(),
       ),
 
 

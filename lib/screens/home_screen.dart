@@ -148,7 +148,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: FilterChipWidget(
                       label: 'Restaurants',
                       isSelected: _selectedFilter == 3,
-                      onTap: () => setState(() => _selectedFilter = 3),
+                      onTap: () {
+                        setState(() => _selectedFilter = 3);
+                        context.go('/restaurants');
+                      },
                     ),
                   ),
                 ],
