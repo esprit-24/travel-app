@@ -4,6 +4,7 @@ import 'package:travel_app/screens/hotel_search_page.dart';
 import 'package:travel_app/screens/notification_screen.dart';
 import 'package:travel_app/screens/restaurants_screen.dart';
 import 'package:travel_app/screens/search_page.dart';
+import 'package:travel_app/screens/trips_page.dart';
 
 // Provider d'auth
 import '../providers/auth_provider.dart';
@@ -81,6 +82,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RestaurantsPage(),
       ),
 
+      // Route pour la page voyages
+      GoRoute(
+        path: '/voyages',
+        builder: (context, state) =>  TripsPage(),
+      ),
 
     ],
   );
