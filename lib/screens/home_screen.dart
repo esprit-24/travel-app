@@ -25,12 +25,14 @@ class _HomeScreenState extends State<HomeScreen> {
       name: 'Santorin',
       country: 'Grèce',
       price: '\$420',
+      type: '',
     ),
     Destination(
       image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf',
       name: 'Tokyo',
       country: 'Japon',
       price: '\$680',
+      type: '',
     ),
   ];
 

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:travel_app/screens/home_screen.dart';
+import 'package:travel_app/screens/hotel_search_page.dart';
+//import 'package:travel_app/screens/home_screen.dart';
+import 'package:travel_app/screens/travel_search_page.dart';
+//import 'package:travel_app/widgets/search_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +18,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
 
       title: 'Travel App',
-      home: const HomeScreen(),
+      home: const HotelSearchPage(),
     );
   }
 }
