@@ -23,6 +23,8 @@ class DestinationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+
+          // 📌 IMAGE
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: Image.network(
@@ -32,25 +34,34 @@ class DestinationCard extends StatelessWidget {
               fit: BoxFit.cover,
             ),
           ),
+
+          // 📌 TEXTE
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+
+                // 🔹 Nom + Prix
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      destination.name,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A3A52),
+                    Expanded(
+                      child: Text(
+                        destination.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A3A52),
+                        ),
                       ),
                     ),
+
+                    const SizedBox(width: 8),
+
                     Container(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8F5F3),
                         borderRadius: BorderRadius.circular(8),
@@ -66,7 +77,10 @@ class DestinationCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+
+                const SizedBox(height: 6),
+
+                // 🔹 Pays
                 Text(
                   destination.country,
                   style: TextStyle(
@@ -74,6 +88,40 @@ class DestinationCard extends StatelessWidget {
                     color: Colors.grey.shade600,
                   ),
                 ),
+
+                const SizedBox(height: 10),
+
+                // 🔹 Rating + nombre d’avis
+                Row(
+                  children: [
+                    // ⭐ icône étoile
+                    const Icon(Icons.star, color: Color(0xFFFFC107), size: 20),
+
+                    const SizedBox(width: 4),
+
+                    // ⭐ Note
+                    Text(
+                      destination.rating.toStringAsFixed(1),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A3A52),
+                      ),
+                    ),
+
+                    const SizedBox(width: 6),
+
+                    // 👥 Nombre d'avis
+                    Text(
+                      "(${destination.reviews} avis)",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+
               ],
             ),
           ),

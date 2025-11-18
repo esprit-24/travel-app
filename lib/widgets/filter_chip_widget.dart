@@ -17,16 +17,21 @@ class FilterChipWidget extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        alignment: Alignment.center, // 📌 Pour bien fonctionner avec Expanded
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF00897B) : Colors.grey.shade100,
+          color: isSelected ? const Color(0xFF00A896) : Colors.white,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF00A896) : Colors.grey[300]!,
+          ),
         ),
         child: Text(
           label,
           style: TextStyle(
             color: isSelected ? Colors.white : const Color(0xFF1A3A52),
-            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
