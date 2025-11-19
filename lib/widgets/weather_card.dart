@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class WeatherCard extends StatelessWidget {
   const WeatherCard({super.key});
@@ -40,7 +41,9 @@ class WeatherCard extends StatelessWidget {
             ],
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              context.go('/meteo');
+            },
             child: const Text(
               'Voir plus',
               style: TextStyle(

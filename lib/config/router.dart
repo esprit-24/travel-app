@@ -5,6 +5,7 @@ import 'package:travel_app/screens/notification_screen.dart';
 import 'package:travel_app/screens/restaurants_screen.dart';
 import 'package:travel_app/screens/search_page.dart';
 import 'package:travel_app/screens/trips_page.dart';
+import 'package:travel_app/screens/weather_detail_screen.dart';
 
 // Provider d'auth
 import '../providers/auth_provider.dart';
@@ -86,6 +87,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/voyages',
         builder: (context, state) =>  TripsPage(),
+      ),
+
+      // Route pour la page météo
+      GoRoute(
+        path: '/meteo',
+        builder: (context, state) =>  WeatherDetailScreen(),
       ),
 
     ],
