@@ -1,7 +1,9 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:travel_app/screens/edit_profile_screen.dart';
 import 'package:travel_app/screens/hotel_search_page.dart';
 import 'package:travel_app/screens/notification_screen.dart';
+import 'package:travel_app/screens/profile_screen.dart';
 import 'package:travel_app/screens/restaurants_screen.dart';
 import 'package:travel_app/screens/search_page.dart';
 import 'package:travel_app/screens/trips_page.dart';
@@ -93,6 +95,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/meteo',
         builder: (context, state) =>  WeatherDetailScreen(),
+      ),
+
+      // Route pour la page profil
+      GoRoute(
+        path: '/profil',
+        builder: (context, state) =>  ProfileScreen(),
+      ),
+
+      GoRoute(
+        path: '/profil/edit',
+        builder: (context, state) =>  EditProfileScreen(),
       ),
 
     ],
