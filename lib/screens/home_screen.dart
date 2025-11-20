@@ -188,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // ============================================================
       // 🔸 BARRE DE NAVIGATION INFÉRIEURE
       // ============================================================
-      bottomNavigationBar: BottomNavigationBar(
+     /* bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedNavIndex,
         onTap: (index) {
           setState(() => _selectedNavIndex = index);
@@ -218,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Profil',
           ),
         ],
-      ),
+      ),*/
     );
   }
 }

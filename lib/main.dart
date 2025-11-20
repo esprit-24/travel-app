@@ -1,5 +1,11 @@
+
+
+
 import 'package:flutter/material.dart';
-import 'package:travel_app/screens/home_screen.dart';
+
+// ✅ CORRECTION : Utilisation de l'importation par package pour plus de robustesse.
+// Elle suppose que votre projet s'appelle 'travel_app'.
+import 'package:travel_app/screens/root_screens.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +21,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
 
       title: 'Travel App',
-      home: const HomeScreen(),
+      // ➡️ RootScreen() est maintenant correctement importé
+      home: const RootScreen(),
     );
   }
 }
