@@ -1,10 +1,13 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/auth_service.dart';
 
+import '../../services/auth_service.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -19,7 +22,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+  TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -27,12 +31,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // MOBILE
   File? _selectedImage;
+
+  // WEB
+  Uint8List? _webImageBytes;
+
   final ImagePicker _imagePicker = ImagePicker();
 
-  // ─────────────────────────────────────────────
-  //  Image Picker (avatar)
-  // ─────────────────────────────────────────────
+  // ---------------------------------------------------------------------------
+  // PICK IMAGE (WEB + MOBILE)
+  // ---------------------------------------------------------------------------
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _imagePicker.pickImage(
       source: ImageSource.gallery,
@@ -41,9 +50,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       imageQuality: 85,
     );
 
-    if (pickedFile != null) {
+    if (pickedFile == null) return;
+
+    if (kIsWeb) {
+      // WEB → Uint8List
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _webImageBytes = bytes;
+        _selectedImage = null; // important
+      });
+    } else {
+      // MOBILE → File
       setState(() {
         _selectedImage = File(pickedFile.path);
+        _webImageBytes = null;
       });
     }
   }
@@ -60,16 +80,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  // ─────────────────────────────────────────────
-  //  INSCRIPTION = Firebase Auth + API PHP
-  // ─────────────────────────────────────────────
+  // ---------------------------------------------------------------------------
+  // INSCRIPTION = Firebase + API PHP + Upload photo Web/Mobile
+  // ---------------------------------------------------------------------------
   Future<void> _register() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    // Vérifier les mots de passe
     if (_passwordController.text.trim() !=
         _confirmPasswordController.text.trim()) {
       setState(() {
@@ -79,7 +98,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    // (Optionnel) : vérifier champs obligatoires
     if (_firstNameController.text.trim().isEmpty ||
         _lastNameController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty ||
@@ -92,40 +110,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     try {
-      // 🔐 1) Firebase crée le compte
-      // 🌐 2) API PHP crée la ligne dans PostgreSQL
-      // 📸 3) API PHP reçoit la photo si _selectedImage != null
       final appUser = await AuthService.instance.signUpWithEmail(
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         phone: _phoneController.text.trim(),
+
+        /// MOBILE → File
         photoFile: _selectedImage,
+
+        /// WEB → Uint8List
+        webImageBytes: _webImageBytes,
         role: "user",
       );
 
-      // (facultatif) debug
-      // print("Utilisateur créé : ${appUser.uid} / ${appUser.email}");
-
       if (!mounted) return;
 
-      // Succès → on va sur /home, GoRouter gère le reste
       context.go('/home');
     } catch (e) {
       setState(() {
         _errorMessage = "Une erreur est survenue lors de l'inscription.";
-        // Si tu veux voir le détail :
-        // _errorMessage = e.toString();
       });
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
+
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -188,8 +202,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const SizedBox(height: 20),
 
               // ------------------------------ FORMULAIRE ------------------------------
-              Container
-                (
+              Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -199,7 +212,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Photo de profil
+                    // ------- PHOTO DE PROFIL -------
                     Center(
                       child: Column(
                         children: [
@@ -216,7 +229,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   width: 2,
                                 ),
                               ),
-                              child: _selectedImage != null
+                              child: _webImageBytes != null
+                                  ? ClipOval(
+                                child: Image.memory(
+                                  _webImageBytes!,
+                                  fit: BoxFit.cover,
+                                  width: 100,
+                                  height: 100,
+                                ),
+                              )
+                                  : _selectedImage != null
                                   ? ClipOval(
                                 child: Image.file(
                                   _selectedImage!,
@@ -290,9 +312,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       label: "Mot de passe",
                       controller: _passwordController,
                       obscure: _obscurePassword,
-                      onToggle: () => setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      }),
+                      onToggle: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
 
                     const SizedBox(height: 10),
@@ -301,9 +322,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       label: "Confirmer le mot de passe",
                       controller: _confirmPasswordController,
                       obscure: _obscureConfirmPassword,
-                      onToggle: () => setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      }),
+                      onToggle: () => setState(
+                              () => _obscureConfirmPassword = !_obscureConfirmPassword),
                     ),
                   ],
                 ),
@@ -311,7 +331,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
               const SizedBox(height: 20),
 
-              // ------------------------------ ERREURS ------------------------------
               if (_errorMessage != null) ...[
                 Text(
                   _errorMessage!,
@@ -320,7 +339,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 10),
               ],
 
-              // ------------------------------ BOUTON ------------------------------
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -385,7 +403,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   // ---------------------------------------------------------------------------
-  // ------------------------------ INPUT HELPERS ------------------------------
+  // INPUT HELPERS
   // ---------------------------------------------------------------------------
 
   Widget _buildInput({
@@ -490,7 +508,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             suffixIcon: IconButton(
               icon: Icon(
-                obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                obscure
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
                 color: Colors.grey.shade400,
               ),
               onPressed: onToggle,

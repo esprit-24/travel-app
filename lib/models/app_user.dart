@@ -5,7 +5,7 @@ class AppUser {
   final String email;
   final String phone;
   final String? photoUrl;
-  final String role; // "user" ou "admin"
+  final String role;
 
   AppUser({
     required this.uid,
@@ -14,10 +14,9 @@ class AppUser {
     required this.email,
     required this.phone,
     this.photoUrl,
-    this.role = "user", // rôle par défaut
+    this.role = "user",
   });
 
-  // Convertir AppUser → Map (pour Firestore)
   Map<String, dynamic> toJson() {
     return {
       'uid': uid,
@@ -30,15 +29,14 @@ class AppUser {
     };
   }
 
-  // Convertir Map → AppUser (depuis Firestore)
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
       uid: json['uid'],
-      firstName: json['firstName'],
-      lastName: json['lastName'],
+      firstName: json['first_name'],      // <-- correspond à API
+      lastName: json['last_name'],        // <-- correspond à API
       email: json['email'],
       phone: json['phone'],
-      photoUrl: json['photoUrl'],
+      photoUrl: json['photo_url'],        // <-- API renvoie photo_url
       role: json['role'] ?? "user",
     );
   }

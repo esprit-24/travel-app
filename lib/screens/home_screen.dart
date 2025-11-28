@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:travel_app/data/destination_data.dart';
 import 'package:travel_app/models/destination_model.dart';
 import 'package:travel_app/widgets/bottom_nav_bar.dart';
+import '../providers/user_provider.dart';
 import '../widgets/destination_card.dart';
 import '../widgets/filter_chip_widget.dart';
 import '../widgets/weather_card.dart';
@@ -50,6 +52,45 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+
+        // ⬅️ PHOTO DU USER À GAUCHE
+        leading: Consumer(
+          builder: (context, ref, _) {
+            final userAsync = ref.watch(userProvider);
+
+            return userAsync.when(
+              loading: () => Padding(
+                padding: const EdgeInsets.only(left: 15),
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.grey.shade200,
+                  child: const Icon(Icons.person, color: Colors.grey),
+                ),
+              ),
+
+              error: (err, _) => const Icon(Icons.error, color: Colors.red),
+
+              data: (user) {
+                return GestureDetector(
+                  onTap: () => context.go('/profil'),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 15),
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: Colors.grey.shade300,
+                      backgroundImage: (user != null && user.photoUrl != null)
+                          ? NetworkImage(user.photoUrl!)
+                          : const NetworkImage(
+                        "https://images.unsplash.com/photo-1544005313-94ddf0286df2",
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+
         title: const Text(
           'Travel App',
           style: TextStyle(
@@ -58,6 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Color(0xFF1A3A52),
           ),
         ),
+
+        // ➡️ BOUTON NOTIFICATIONS À DROITE
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20),
@@ -80,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+
 
       // ----------------------------------------------------------------------
       // 🔹 BODY
