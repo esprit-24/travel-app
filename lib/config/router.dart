@@ -1,39 +1,42 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:travel_app/screens/edit_profile_screen.dart';
-import 'package:travel_app/screens/hotel_search_page.dart';
-import 'package:travel_app/screens/notification_screen.dart';
-import 'package:travel_app/screens/profile_screen.dart';
-import 'package:travel_app/screens/restaurants_screen.dart';
-import 'package:travel_app/screens/search_page.dart';
-import 'package:travel_app/screens/trips_page.dart';
-import 'package:travel_app/screens/weather_detail_screen.dart';
-
-// Provider d'auth
-import '../providers/auth_provider.dart';
 
 // Écrans
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/home_screen.dart';
+import '../screens/edit_profile_screen.dart';
+import '../screens/hotel_search_page.dart';
+import '../screens/notification_screen.dart';
+import '../screens/profile_screen.dart';
+import '../screens/restaurants_screen.dart';
+import '../screens/search_page.dart';
+import '../screens/trips_page.dart';
+import '../screens/weather_detail_screen.dart';
 
-/// Router principal de l'app
+// Provider d'auth basé sur Firebase
+import '../providers/auth_provider.dart';
+
+/// Router principal
 final routerProvider = Provider<GoRouter>((ref) {
-  final isLoggedIn = ref.watch(authProvider);
+  // Firebase donne l’état réel : connecté / déconnecté
+  final isLoggedIn = ref.watch(isLoggedInProvider);
 
   return GoRouter(
     initialLocation: '/login',
+
+    debugLogDiagnostics: true, // utile pour voir les redirections
 
     redirect: (context, state) {
       final goingToLogin = state.matchedLocation == '/login';
       final goingToRegister = state.matchedLocation == '/register';
 
-      // Si pas connecté → uniquement /login ou /register accessible
+      // 🔐 Si NON connecté → accès interdit sauf login/register
       if (!isLoggedIn && !goingToLogin && !goingToRegister) {
         return '/login';
       }
 
-      // Si connecté et il va sur /login ou /register → envoyer à /home
+      // 🔐 Si connecté → bloquer login/register → aller à home
       if (isLoggedIn && (goingToLogin || goingToRegister)) {
         return '/home';
       }
@@ -42,72 +45,60 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
 
     routes: [
-
-      // Route pour la Connexion
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
       ),
 
-      // Route pour l'Inscription
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
 
-      // Route pour la page d'Accueil
       GoRoute(
         path: '/home',
         builder: (context, state) => const HomeScreen(),
       ),
 
-      // Route pour la page Notification
       GoRoute(
-          path: '/notifications',
-          builder: (context, state) => const NotificationScreen(),
+        path: '/notifications',
+        builder: (context, state) => const NotificationScreen(),
       ),
 
-      // Route pour la page Recherche
       GoRoute(
         path: '/search',
         builder: (context, state) => const SearchPage(),
       ),
 
-      // Route pour la page hotels
       GoRoute(
         path: '/hotels',
         builder: (context, state) => const HotelSearchPage(),
       ),
 
-      // Route pour la page restaurants
       GoRoute(
         path: '/restaurants',
         builder: (context, state) => const RestaurantsPage(),
       ),
 
-      // Route pour la page voyages
       GoRoute(
         path: '/voyages',
-        builder: (context, state) =>  TripsPage(),
+        builder: (context, state) => TripsPage(),
       ),
 
-      // Route pour la page météo
       GoRoute(
         path: '/meteo',
-        builder: (context, state) =>  WeatherDetailScreen(),
+        builder: (context, state) => WeatherDetailScreen(),
       ),
 
-      // Route pour la page profil
       GoRoute(
         path: '/profil',
-        builder: (context, state) =>  ProfileScreen(),
+        builder: (context, state) => ProfileScreen(),
       ),
 
       GoRoute(
         path: '/profil/edit',
-        builder: (context, state) =>  EditProfileScreen(),
+        builder: (context, state) => EditProfileScreen(),
       ),
-
     ],
   );
 });

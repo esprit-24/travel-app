@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
-
-// Importation de GoRouter pour avoir accès aux fonctionnalités de navigation
-// comme context.go() si on voulait ajouter un lien vers une page d'inscription par exemple.
 import 'package:go_router/go_router.dart';
-
-// Importation de Riverpod pour pouvoir interagir avec nos providers.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Importation du provider d'authentification que nous avons créé.
-// C'est lui qui contient l'état "connecté / déconnecté".
+import '../../services/auth_service.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -21,14 +15,40 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _obscurePassword = true;
 
-  // Libération Mémoire
+  bool _obscurePassword = true;
+  bool _isLoading = false;
+  String? _errorMessage;
+
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // -------------------------------
+  // 🔐 Connexion Firebase
+  // -------------------------------
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await AuthService.instance.signInWithEmail(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (mounted) context.go('/home'); // navigation automatique
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Email ou mot de passe incorrect.";
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -57,7 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               const SizedBox(height: 40),
 
-              // Avatar avec initiales
+              // Avatar
               Container(
                 width: 80,
                 height: 80,
@@ -79,7 +99,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 24),
 
-              // Titre Bienvenue
               const Text(
                 'Bienvenue',
                 style: TextStyle(
@@ -91,19 +110,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 15),
 
-              // Sous-titre
               Text(
                 'Connectez-vous pour poursuivre votre voyage',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade500,
-                ),
+                style: TextStyle(fontSize: 15, color: Colors.grey.shade500),
                 textAlign: TextAlign.center,
               ),
 
               const SizedBox(height: 40),
 
-              // Formulaire de connexion
+              // ------------------------------
+              // Formulaire
+              // ------------------------------
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -114,7 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Champ Email
+                    // Email
                     Text(
                       'Email',
                       style: TextStyle(
@@ -124,6 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
+
                     TextField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -156,7 +174,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Champ Mot de passe
+                    // Mot de passe
                     Text(
                       'Mot de passe',
                       style: TextStyle(
@@ -166,6 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
+
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -215,13 +234,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Mot de passe oublié
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                          // Action mot de passe oublié
-                        },
+                        onPressed: () {},
                         child: const Text(
                           'Mot de passe oublié ?',
                           style: TextStyle(
@@ -238,18 +254,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 24),
 
-              // Bouton Se connecter
+              // ------------------------------
+              // Erreurs
+              // ------------------------------
+              if (_errorMessage != null) ...[
+                Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red, fontSize: 14),
+                ),
+                const SizedBox(height: 10),
+              ],
+
+              // ------------------------------
+              // Bouton Connexion
+              // ------------------------------
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // 1. L'utilisateur est maintenant connecté
-                    ref.read(authProvider.notifier).state = true;
-
-                    // 2. Aller à la page Home
-                    //context.go('/home');
-                  },
+                  onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD4F0EC),
                     foregroundColor: const Color(0xFF00897B),
@@ -258,7 +281,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                    color: Color(0xFF00897B),
+                  )
+                      : const Text(
                     'Se connecter',
                     style: TextStyle(
                       fontSize: 16,
@@ -275,10 +302,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 width: double.infinity,
                 height: 56,
                 child: TextButton(
-                  onPressed: () {
-                    // Aller à la page Register
-                    context.go('/register');
-                  },
+                  onPressed: () => context.go('/register'),
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     foregroundColor: const Color(0xFF00897B),

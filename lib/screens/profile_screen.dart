@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 
 // Riverpod
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/auth_provider.dart';
 
+import '../services/auth_service.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -135,12 +135,8 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
 
-                onPressed: () {
-                  // 👉 Déconnexion via Riverpod
-                  ref.read(authProvider.notifier).state = false;
-
-                  // 👉 Redirection vers login
-                  //context.go('/login');
+                onPressed: () async {
+                  await AuthService.instance.signOut();   // 🔥 Déconnexion Firebase
                 },
               ),
             ),
