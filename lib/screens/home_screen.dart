@@ -20,23 +20,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedFilter = 0;
 
-  // 🔹 Liste triée des destinations par note (rating) décroissante
   late final List<Destination> _sortedByRating;
-
-  // 🔹 On garde les 2 meilleures pour la section "Destinations populaires"
   late final List<Destination> _topTwo;
 
   @override
   void initState() {
     super.initState();
 
-    // On clone la liste pour ne pas modifier DestinationsData
     _sortedByRating = [...DestinationsData.destinations];
-
-    // Tri : du meilleur rating au moins bon
     _sortedByRating.sort((a, b) => b.rating.compareTo(a.rating));
-
-    // On prend les 2 premières comme "destinations populaires"
     _topTwo = _sortedByRating.take(2).toList();
   }
 
@@ -71,6 +63,11 @@ class _HomeScreenState extends State<HomeScreen> {
               error: (err, _) => const Icon(Icons.error, color: Colors.red),
 
               data: (user) {
+                // Anti-cache si photoUrl existe
+                final photoUrl = (user != null && user.photoUrl != null)
+                    ? "${user.photoUrl}?v=${DateTime.now().millisecondsSinceEpoch}"
+                    : "https://images.unsplash.com/photo-1544005313-94ddf0286df2";
+
                 return GestureDetector(
                   onTap: () => context.go('/profil'),
                   child: Padding(
@@ -78,11 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CircleAvatar(
                       radius: 22,
                       backgroundColor: Colors.grey.shade300,
-                      backgroundImage: (user != null && user.photoUrl != null)
-                          ? NetworkImage(user.photoUrl!)
-                          : const NetworkImage(
-                        "https://images.unsplash.com/photo-1544005313-94ddf0286df2",
-                      ),
+                      backgroundImage: NetworkImage(photoUrl),
                     ),
                   ),
                 );
@@ -124,7 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-
       // ----------------------------------------------------------------------
       // 🔹 BODY
       // ----------------------------------------------------------------------
@@ -136,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const SizedBox(height: 10),
 
-              // 🔎 BARRE DE RECHERCHE (tap → /search)
+              // 🔎 BARRE DE RECHERCHE
               GestureDetector(
                 onTap: () => context.go('/search'),
                 child: AbsorbPointer(
@@ -165,7 +157,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 40),
 
-              // 🔸 FILTRES (avec navigation vers /hotels pour "Hôtels")
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -203,7 +194,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 40),
 
-              // 🔸 DESTINATIONS POPULAIRES
               const Text(
                 'Destinations populaires',
                 style: TextStyle(
@@ -228,7 +218,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 30),
 
-              // 🔸 MÉTÉO DU JOUR
               const Text(
                 'Météo du jour',
                 style: TextStyle(
@@ -247,9 +236,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
-      // ----------------------------------------------------------------------
-      // 🔹 BOTTOM NAVIGATION BAR
-      // ----------------------------------------------------------------------
       bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
   }

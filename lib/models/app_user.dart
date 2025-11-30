@@ -17,6 +17,7 @@ class AppUser {
     this.role = "user",
   });
 
+  // Convertir vers JSON (pour l'API)
   Map<String, dynamic> toJson() {
     return {
       'uid': uid,
@@ -29,15 +30,34 @@ class AppUser {
     };
   }
 
+  // Convertir JSON -> AppUser (depuis API)
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
       uid: json['uid'],
-      firstName: json['first_name'],      // <-- correspond à API
-      lastName: json['last_name'],        // <-- correspond à API
+      firstName: json['first_name'],
+      lastName: json['last_name'],
       email: json['email'],
       phone: json['phone'],
-      photoUrl: json['photo_url'],        // <-- API renvoie photo_url
+      photoUrl: json['photo_url'],
       role: json['role'] ?? "user",
+    );
+  }
+
+  // 🔥 Permet de cloner un user et changer un seul champ
+  AppUser copyWith({
+    String? firstName,
+    String? lastName,
+    String? phone,
+    String? photoUrl,
+  }) {
+    return AppUser(
+      uid: uid,
+      email: email,
+      role: role,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      phone: phone ?? this.phone,
+      photoUrl: photoUrl ?? this.photoUrl,
     );
   }
 }

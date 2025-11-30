@@ -1,17 +1,107 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
-class EditProfileScreen extends StatelessWidget {
+import '../providers/user_provider.dart';
+import '../services/auth_service.dart';
+import '../models/app_user.dart';
+
+class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
   @override
+  ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
+  final ImagePicker _picker = ImagePicker();
+
+  File? _newPhotoFile;        // mobile
+  Uint8List? _newPhotoBytes;  // web
+
+  late TextEditingController firstNameCtrl;
+  late TextEditingController lastNameCtrl;
+  late TextEditingController emailCtrl;
+  late TextEditingController phoneCtrl;
+
+  bool isSaving = false;
+  bool isInitialized = false;
+
+  @override
+  void dispose() {
+    firstNameCtrl.dispose();
+    lastNameCtrl.dispose();
+    emailCtrl.dispose();
+    phoneCtrl.dispose();
+    super.dispose();
+  }
+
+  // 📸 Choisir photo (mobile + web)
+  Future<void> _pickPhoto() async {
+    final XFile? file =
+    await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+
+    if (file == null) return;
+
+    if (kIsWeb) {
+      // WEB
+      final bytes = await file.readAsBytes();
+      setState(() {
+        _newPhotoBytes = bytes;
+      });
+    } else {
+      // MOBILE
+      setState(() {
+        _newPhotoFile = File(file.path);
+      });
+    }
+  }
+
+  // 🟦 Enregistrer modifications
+  Future<void> _saveChanges(AppUser oldUser) async {
+    setState(() => isSaving = true);
+
+    // 1) Upload photo si sélectionnée
+    String? newPhotoUrl = oldUser.photoUrl;
+
+    if (_newPhotoFile != null || _newPhotoBytes != null) {
+      final uploaded = await AuthService.instance.uploadPhoto(
+        oldUser.uid,
+        kIsWeb ? _newPhotoBytes! : _newPhotoFile!,
+      );
+
+      if (uploaded != null) newPhotoUrl = uploaded;
+    }
+
+    // 2) User mis à jour
+    final updatedUser = AppUser(
+      uid: oldUser.uid,
+      email: oldUser.email,
+      role: oldUser.role,
+      firstName: firstNameCtrl.text.trim(),
+      lastName: lastNameCtrl.text.trim(),
+      phone: phoneCtrl.text.trim(),
+      photoUrl: newPhotoUrl,
+    );
+
+    // 3) API update
+    await AuthService.instance.updateUserInApi(updatedUser);
+
+    // 4) Mise à jour provider
+    ref.invalidate(userProvider);
+
+    if (mounted) context.go('/profil');
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final userAsync = ref.watch(userProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
-
-      // ─────────────────────────────────────
-      // APPBAR AVEC FLECHE RETOUR
-      // ─────────────────────────────────────
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -30,124 +120,136 @@ class EditProfileScreen extends StatelessWidget {
         ),
       ),
 
-      // ─────────────────────────────────────
-      // BODY
-      // ─────────────────────────────────────
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
+      body: userAsync.when(
+        loading: () =>
+        const Center(child: CircularProgressIndicator(color: Color(0xFF00897B))),
 
-            // Avatar
-            const CircleAvatar(
-              radius: 50,
-              backgroundImage: NetworkImage(
-                'https://images.unsplash.com/photo-1544005313-94ddf0286df2',
-              ),
-            ),
+        error: (err, _) =>
+            Center(child: Text("Erreur : $err", style: const TextStyle(color: Colors.red))),
 
-            const SizedBox(height: 10),
+        data: (user) {
+          if (user == null) {
+            return const Center(child: Text("Utilisateur introuvable."));
+          }
 
-            // Champs nom / prénom / email / phone / pwd
-            _buildTextField("Nom", "Dupont"),
-            _buildTextField("Prénom", "Alexandre"),
-            _buildTextField("Email", "alex.dupont@example.com"),
-            _buildTextField("Numéro de téléphone", "+33 6 12 34 56 78"),
-            _buildTextField("Mot de passe", "********", obscureText: true),
+          if (!isInitialized) {
+            firstNameCtrl = TextEditingController(text: user.firstName);
+            lastNameCtrl = TextEditingController(text: user.lastName);
+            emailCtrl = TextEditingController(text: user.email);
+            phoneCtrl = TextEditingController(text: user.phone);
+            isInitialized = true;
+          }
 
-            const SizedBox(height: 10),
+          // ANTICACHE photo actuelle
+          final photoUrl = (user.photoUrl != null)
+              ? "${user.photoUrl}?v=${DateTime.now().millisecondsSinceEpoch}"
+              : "https://images.unsplash.com/photo-1544005313-94ddf0286df2";
 
-            // 🟩 BOUTON ENREGISTRER
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () => context.go('/profil'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD4F0EC),
-                  foregroundColor: const Color(0xFF00897B),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+          ImageProvider avatarImage;
+
+          if (_newPhotoFile != null) {
+            avatarImage = FileImage(_newPhotoFile!);
+          } else if (_newPhotoBytes != null) {
+            avatarImage = MemoryImage(_newPhotoBytes!);
+          } else {
+            avatarImage = NetworkImage(photoUrl);
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+
+                // 📸 Avatar
+                GestureDetector(
+                  onTap: _pickPhoto,
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: avatarImage,
                   ),
                 ),
-                child: const Text(
-                  "Enregistrer les modifications",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+
+                const SizedBox(height: 10),
+                Text("Changer la photo", style: TextStyle(color: Colors.grey.shade600)),
+
+                const SizedBox(height: 20),
+
+                _buildField("Nom", firstNameCtrl),
+                _buildField("Prénom", lastNameCtrl),
+                _buildField("Email", emailCtrl, enabled: false),
+                _buildField("Numéro de téléphone", phoneCtrl),
+
+                const SizedBox(height: 20),
+
+                // 🟩 Enregistrer
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: isSaving ? null : () => _saveChanges(user),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD4F0EC),
+                      foregroundColor: const Color(0xFF00897B),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: isSaving
+                        ? const CircularProgressIndicator(color: Color(0xFF00897B))
+                        : const Text("Enregistrer les modifications",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
                 ),
-              ),
-            ),
 
-            const SizedBox(height: 10),
+                const SizedBox(height: 10),
 
-            // Bouton ANNULER
-            TextButton(
-              onPressed: () => context.go('/profil'),
-              child: Text(
-                "Annuler",
-                style: TextStyle(fontSize: 15, color: Colors.grey.shade500),
-              ),
+                TextButton(
+                  onPressed: () => context.go('/profil'),
+                  child: Text("Annuler",
+                      style: TextStyle(fontSize: 15, color: Colors.grey.shade500)),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  // ─────────────────────────────────────
-  // TEXTFIELD RÉUTILISABLE (style Register)
-  // ─────────────────────────────────────
-  Widget _buildTextField(
+  Widget _buildField(
       String label,
-      String initialValue, {
-        bool obscureText = false,
+      TextEditingController controller, {
+        bool enabled = true,
       }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Label
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
+          Text(label,
+              style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
-
-          // TextField
-          TextFormField(
-            initialValue: initialValue,
-            obscureText: obscureText,
+          TextField(
+            controller: controller,
+            enabled: enabled,
             decoration: InputDecoration(
-              hintText: label,
-              hintStyle: TextStyle(color: Colors.grey.shade500),
               filled: true,
-              fillColor: Colors.grey.shade50,
+              fillColor: enabled ? Colors.grey.shade50 : Colors.grey.shade200,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade200),
+                borderSide: BorderSide(color: Colors.grey.shade300),
               ),
-              enabledBorder: OutlineInputBorder(
+              disabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade200),
+                borderSide: BorderSide(color: Colors.grey.shade300),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: Color(0xFF00897B),
-                  width: 2,
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
         ],

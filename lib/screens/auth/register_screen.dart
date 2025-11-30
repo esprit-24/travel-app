@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../providers/user_provider.dart';
 import '../../services/auth_service.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -22,8 +23,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-  TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -57,7 +57,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       final bytes = await pickedFile.readAsBytes();
       setState(() {
         _webImageBytes = bytes;
-        _selectedImage = null; // important
+        _selectedImage = null;
       });
     } else {
       // MOBILE → File
@@ -84,6 +84,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   // INSCRIPTION = Firebase + API PHP + Upload photo Web/Mobile
   // ---------------------------------------------------------------------------
   Future<void> _register() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -91,21 +93,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     if (_passwordController.text.trim() !=
         _confirmPasswordController.text.trim()) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = "Les mots de passe ne correspondent pas.";
-      });
-      return;
-    }
-
-    if (_firstNameController.text.trim().isEmpty ||
-        _lastNameController.text.trim().isEmpty ||
-        _emailController.text.trim().isEmpty ||
-        _phoneController.text.trim().isEmpty) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = "Veuillez remplir tous les champs obligatoires.";
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = "Les mots de passe ne correspondent pas.";
+        });
+      }
       return;
     }
 
@@ -116,11 +109,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         phone: _phoneController.text.trim(),
-
-        /// MOBILE → File
         photoFile: _selectedImage,
-
-        /// WEB → Uint8List
         webImageBytes: _webImageBytes,
         role: "user",
       );
@@ -129,15 +118,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       context.go('/home');
     } catch (e) {
-      setState(() {
-        _errorMessage = "Une erreur est survenue lors de l'inscription.";
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = "Une erreur est survenue lors de l'inscription.";
+        });
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
+
 
   // ---------------------------------------------------------------------------
 
@@ -323,7 +315,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       controller: _confirmPasswordController,
                       obscure: _obscureConfirmPassword,
                       onToggle: () => setState(
-                              () => _obscureConfirmPassword = !_obscureConfirmPassword),
+                            () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                      ),
                     ),
                   ],
                 ),
