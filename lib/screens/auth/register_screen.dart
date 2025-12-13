@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/user_provider.dart';
 import '../../services/auth_service.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -23,7 +22,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -103,7 +103,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     try {
-      final appUser = await AuthService.instance.signUpWithEmail(
+      await AuthService.instance.signUpWithEmail(
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
@@ -129,7 +129,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     }
   }
-
 
   // ---------------------------------------------------------------------------
 
@@ -185,10 +184,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
               Text(
                 'Inscrivez-vous pour planifier et réserver vos voyages.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade500,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               ),
 
               const SizedBox(height: 20),
@@ -223,27 +219,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                               child: _webImageBytes != null
                                   ? ClipOval(
-                                child: Image.memory(
-                                  _webImageBytes!,
-                                  fit: BoxFit.cover,
-                                  width: 100,
-                                  height: 100,
-                                ),
-                              )
+                                      child: Image.memory(
+                                        _webImageBytes!,
+                                        fit: BoxFit.cover,
+                                        width: 100,
+                                        height: 100,
+                                      ),
+                                    )
                                   : _selectedImage != null
                                   ? ClipOval(
-                                child: Image.file(
-                                  _selectedImage!,
-                                  fit: BoxFit.cover,
-                                  width: 100,
-                                  height: 100,
-                                ),
-                              )
+                                      child: Image.file(
+                                        _selectedImage!,
+                                        fit: BoxFit.cover,
+                                        width: 100,
+                                        height: 100,
+                                      ),
+                                    )
                                   : const Icon(
-                                Icons.camera_alt,
-                                size: 40,
-                                color: Color(0xFF00897B),
-                              ),
+                                      Icons.camera_alt,
+                                      size: 40,
+                                      color: Color(0xFF00897B),
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -315,7 +311,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       controller: _confirmPasswordController,
                       obscure: _obscureConfirmPassword,
                       onToggle: () => setState(
-                            () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                        () =>
+                            _obscureConfirmPassword = !_obscureConfirmPassword,
                       ),
                     ),
                   ],
@@ -347,15 +344,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(
-                    color: Color(0xFF00897B),
-                  )
+                          color: Color(0xFF00897B),
+                        )
                       : const Text(
-                    'S\'inscrire',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                          'S\'inscrire',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
 
@@ -435,10 +432,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF00897B),
-                width: 2,
-              ),
+              borderSide: const BorderSide(color: Color(0xFF00897B), width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -490,10 +484,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF00897B),
-                width: 2,
-              ),
+              borderSide: const BorderSide(color: Color(0xFF00897B), width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

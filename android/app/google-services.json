@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "885551737474",
+    "project_id": "travelapp-2e903",
+    "storage_bucket": "travelapp-2e903.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:885551737474:android:6c5e2153c9ad74c37fa29b",
+        "android_client_info": {
+          "package_name": "ugb.sat.travel_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxQDwxUb-yF8b3uxo3KQo4AUljXzTfocI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

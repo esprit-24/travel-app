@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/user_provider.dart';
 import '../../services/auth_service.dart';
-import '../../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -44,7 +43,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       ref.invalidate(userProvider);
-
 
       if (mounted) context.go('/home'); // navigation automatique
     } catch (e) {
@@ -287,15 +285,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(
-                    color: Color(0xFF00897B),
-                  )
+                          color: Color(0xFF00897B),
+                        )
                       : const Text(
-                    'Se connecter',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                          'Se connecter',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
 
@@ -316,10 +314,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: const Text(
                     'Créer un compte',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

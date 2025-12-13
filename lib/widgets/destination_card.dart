@@ -14,7 +14,7 @@ class DestinationCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 128),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -23,7 +23,6 @@ class DestinationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           // 📌 IMAGE
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -41,7 +40,6 @@ class DestinationCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 // 🔹 Nom + Prix
                 Row(
                   children: [
@@ -61,7 +59,10 @@ class DestinationCard extends StatelessWidget {
                     const SizedBox(width: 8),
 
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8F5F3),
                         borderRadius: BorderRadius.circular(8),
@@ -83,10 +84,7 @@ class DestinationCard extends StatelessWidget {
                 // 🔹 Pays
                 Text(
                   destination.country,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
 
                 const SizedBox(height: 10),
@@ -121,7 +119,6 @@ class DestinationCard extends StatelessWidget {
                     ),
                   ],
                 ),
-
               ],
             ),
           ),

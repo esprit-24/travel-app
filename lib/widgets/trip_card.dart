@@ -5,11 +5,7 @@ class TripCard extends StatelessWidget {
   final Trip trip;
   final VoidCallback onTap;
 
-  const TripCard({
-    super.key,
-    required this.trip,
-    required this.onTap,
-  });
+  const TripCard({super.key, required this.trip, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +16,7 @@ class TripCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.07),
+            color: Colors.grey.withValues(alpha: 18),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -29,7 +25,6 @@ class TripCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           // ░░░ IMAGE ░░░
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -47,7 +42,6 @@ class TripCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -76,10 +70,7 @@ class TripCard extends StatelessWidget {
                 // ----- pays -----
                 Text(
                   trip.country,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
 
                 const SizedBox(height: 12),
