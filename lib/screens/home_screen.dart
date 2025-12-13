@@ -75,7 +75,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CircleAvatar(
                       radius: 22,
                       backgroundColor: Colors.grey.shade300,
-                      backgroundImage: NetworkImage(photoUrl),
+                      child: ClipOval(
+                        child: Image.network(
+                          photoUrl,
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.person,
+                              size: 22,
+                              color: Colors.grey,
+                            );
+                          },
+                        ),
+                      ),
                     ),
                   ),
                 );

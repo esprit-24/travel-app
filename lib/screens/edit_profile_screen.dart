@@ -166,11 +166,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   onTap: _pickPhoto,
                   child: CircleAvatar(
                     radius: 50,
-                    backgroundImage: avatarImage,
+                    backgroundColor: Colors.grey.shade300,
+                    child: ClipOval(
+                      child: _buildAvatarImage(avatarImage),
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 10),
+
                 Text("Changer la photo", style: TextStyle(color: Colors.grey.shade600)),
 
                 const SizedBox(height: 20),
@@ -256,4 +260,38 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ),
     );
   }
+
+  Widget _buildAvatarImage(ImageProvider imageProvider) {
+    if (imageProvider is FileImage || imageProvider is MemoryImage) {
+      return Image(
+        image: imageProvider,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+      );
+    }
+
+    if (imageProvider is NetworkImage) {
+      return Image.network(
+        imageProvider.url,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) {
+          return const Icon(
+            Icons.person,
+            size: 50,
+            color: Colors.grey,
+          );
+        },
+      );
+    }
+
+    return const Icon(
+      Icons.person,
+      size: 50,
+      color: Colors.grey,
+    );
+  }
+
 }

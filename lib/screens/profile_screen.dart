@@ -81,7 +81,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       CircleAvatar(
                         radius: 40,
-                        backgroundImage: NetworkImage(photo),
+                        backgroundColor: Colors.grey.shade300,
+                        child: photo.isNotEmpty
+                            ? ClipOval(
+                          child: Image.network(
+                            photo,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.person,
+                                size: 40,
+                                color: Colors.grey,
+                              );
+                            },
+                          ),
+                        )
+                            : const Icon(
+                          Icons.person,
+                          size: 40,
+                          color: Colors.grey,
+                        ),
                       ),
 
                       const SizedBox(width: 15),
