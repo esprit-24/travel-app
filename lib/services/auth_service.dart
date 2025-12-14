@@ -21,8 +21,15 @@ class AuthService {
   // Convertit localhost → IP compatible Android
   String _fixUrlForDevice(String url) {
     if (kIsWeb) return url;
-    if (!url.contains("localhost")) return url;
-    return url.replaceFirst("http://localhost", "http://10.0.2.2");
+
+    if (url.contains("localhost")) {
+      return url.replaceFirst(
+        "http://localhost",
+        "http://10.151.37.195", // 👉 IP locale du PC
+      );
+    }
+
+    return url;
   }
 
   // Ajoute anti-cache
@@ -45,7 +52,6 @@ class AuthService {
 
     String role = "user",
   }) async {
-
     // Firebase
     final userCred = await _auth.createUserWithEmailAndPassword(
       email: email,
@@ -118,9 +124,7 @@ class AuthService {
     final request = http.MultipartRequest("POST", url);
     request.fields["uid"] = uid;
 
-    request.files.add(
-      await http.MultipartFile.fromPath("photo", file.path),
-    );
+    request.files.add(await http.MultipartFile.fromPath("photo", file.path));
 
     final res = await request.send();
     final body = await res.stream.bytesToString();
@@ -141,7 +145,11 @@ class AuthService {
     request.fields["uid"] = uid;
 
     request.files.add(
-      http.MultipartFile.fromBytes("photo", bytes, filename: "${uid}_profile.jpg"),
+      http.MultipartFile.fromBytes(
+        "photo",
+        bytes,
+        filename: "${uid}_profile.jpg",
+      ),
     );
 
     final res = await request.send();
@@ -220,9 +228,7 @@ class AuthService {
     final data = jsonDecode(res.body);
 
     if (data["photo_url"] != null) {
-      data["photo_url"] = _addCacheBypass(
-        _fixUrlForDevice(data["photo_url"]),
-      );
+      data["photo_url"] = _addCacheBypass(_fixUrlForDevice(data["photo_url"]));
     }
 
     return AppUser.fromJson(data);
