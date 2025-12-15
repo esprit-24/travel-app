@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../models/user_model.dart';
 import '../../widgets/app_text_field.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -33,6 +34,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void _onRegisterPressed() {
+    // 🔹 UTILISATEUR FAKE (temporaire)
+    final fakeUser = UserModel(
+      id: 1,
+      firebaseUid: 'fake_firebase_uid',
+      email: _emailController.text.isNotEmpty
+          ? _emailController.text
+          : 'user@example.com',
+      prenom: _firstNameController.text.isNotEmpty
+          ? _firstNameController.text
+          : 'Utilisateur',
+      nom: _lastNameController.text.isNotEmpty
+          ? _lastNameController.text
+          : 'Test',
+      telephone: _phoneController.text,
+      photoUrl: null,
+      role: 'USER',
+      isActive: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    // 🔹 Connexion directe après inscription
+    ref.read(authProvider.notifier).loginSuccess(fakeUser);
   }
 
   @override
@@ -106,7 +133,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               child: Column(
                 children: [
-                  // Prénom / Nom
                   Row(
                     children: [
                       Expanded(
@@ -192,9 +218,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () {
-                  ref.read(authProvider.notifier).state = true;
-                },
+                onPressed: _onRegisterPressed,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD4F0EC),
                   foregroundColor: const Color(0xFF00897B),
@@ -215,7 +239,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
             const SizedBox(height: 15),
 
-            // Déjà un compte ?
             Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,

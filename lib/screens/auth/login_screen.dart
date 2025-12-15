@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../models/user_model.dart';
 import '../../widgets/app_text_field.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -23,6 +24,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _onLoginPressed() {
+    // 🔹 UTILISATEUR FAKE (temporaire)
+    final fakeUser = UserModel(
+      id: 1,
+      firebaseUid: 'fake_firebase_uid',
+      email: _emailController.text.isNotEmpty
+          ? _emailController.text
+          : 'alex@example.com',
+      prenom: 'Lamine',
+      nom: 'Diop',
+      telephone: '770000000',
+      photoUrl: null,
+      role: 'USER',
+      isActive: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    // 🔹 Connexion via AuthNotifier
+    ref.read(authProvider.notifier).loginSuccess(fakeUser);
   }
 
   @override
@@ -161,9 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () {
-                  ref.read(authProvider.notifier).state = true;
-                },
+                onPressed: _onLoginPressed,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD4F0EC),
                   foregroundColor: const Color(0xFF00897B),
