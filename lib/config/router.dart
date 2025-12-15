@@ -45,30 +45,21 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
 
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
 
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
 
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeScreen(),
-      ),
+      GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
 
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationScreen(),
       ),
 
-      GoRoute(
-        path: '/search',
-        builder: (context, state) => const SearchPage(),
-      ),
+      GoRoute(path: '/search', builder: (context, state) => const SearchPage()),
 
       GoRoute(
         path: '/hotels',
@@ -80,20 +71,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RestaurantsPage(),
       ),
 
-      GoRoute(
-        path: '/voyages',
-        builder: (context, state) => TripsPage(),
-      ),
+      GoRoute(path: '/voyages', builder: (context, state) => TripsPage()),
 
       GoRoute(
         path: '/meteo',
         builder: (context, state) => WeatherDetailScreen(),
       ),
 
-      GoRoute(
-        path: '/profil',
-        builder: (context, state) => ProfileScreen(),
-      ),
+      GoRoute(path: '/profil', builder: (context, state) => ProfileScreen()),
 
       GoRoute(
         path: '/profil/edit',

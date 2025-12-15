@@ -1,15 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-/// ⬅️ Fournit le *User?* Firebase en temps réel.
-/// null  => pas connecté
-/// User  => connecté
+/// Fournit l’état Firebase en temps réel
 final authStateProvider = StreamProvider<User?>((ref) {
   return FirebaseAuth.instance.authStateChanges();
 });
 
-/// Fournit un bool pratique pour GoRouter
+/// Bool fiable pour GoRouter
 final isLoggedInProvider = Provider<bool>((ref) {
   final authState = ref.watch(authStateProvider);
-  return authState.value != null;
+
+  return authState.when(
+    data: (user) => user != null,
+    loading: () => false,
+    error: (_, __) => false,
+  );
 });
