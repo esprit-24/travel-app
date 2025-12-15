@@ -6,6 +6,9 @@ import '../data/destination_data.dart';
 import '../models/destination_model.dart';
 import '../widgets/filter_chip_widget.dart';
 import '../widgets/destination_card.dart';
+import '../widgets/search_bar_widget.dart';
+
+import '../services/hotel_search_service.dart';
 
 class HotelSearchPage extends StatefulWidget {
   const HotelSearchPage({super.key});
@@ -15,52 +18,64 @@ class HotelSearchPage extends StatefulWidget {
 }
 
 class _HotelSearchPageState extends State<HotelSearchPage> {
+  // ─────────────────────────────────────
+  // ÉTATS
+  // ─────────────────────────────────────
   String selectedFilter = 'Étoiles';
   String searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
-  // 🔹 Récupère uniquement les hôtels depuis la base globale
-  List<Destination> get allHotels =>
-      DestinationsData.destinations.where((d) => d.type == 'hotel').toList();
+  bool _isLoading = false;
+  List<Destination> _results = [];
 
-  // 🔹 Application des filtres
-  List<Destination> _filterHotels() {
-    List<Destination> hotels = [...allHotels];
-
-    // Recherche
-    if (searchQuery.isNotEmpty) {
-      final q = searchQuery.toLowerCase();
-      hotels = hotels.where((h) {
-        return h.name.toLowerCase().contains(q) ||
-            h.country.toLowerCase().contains(q);
-      }).toList();
-    }
-
-    // Tri
-    if (selectedFilter == 'Étoiles') {
-      hotels.sort((a, b) => b.rating.compareTo(a.rating));
-    } else if (selectedFilter == 'Prix') {
-      hotels.sort((a, b) => a.price.compareTo(b.price));
-    } else if (selectedFilter == 'Popularité') {
-      hotels.sort((a, b) => b.reviews.compareTo(a.reviews));
-    }
-
-    return hotels;
+  // ─────────────────────────────────────
+  // INIT
+  // ─────────────────────────────────────
+  @override
+  void initState() {
+    super.initState();
+    _refreshHotels();
   }
 
+  // ─────────────────────────────────────
+  // ASYNC (SIMULÉ)
+  // ─────────────────────────────────────
+  Future<void> _refreshHotels() async {
+    setState(() => _isLoading = true);
+
+    // ⏳ Simulation appel réseau / base
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    final hotels = HotelSearchService.filterHotels(
+      destinations: DestinationsData.destinations,
+      selectedFilter: selectedFilter,
+      searchQuery: searchQuery,
+    );
+
+    setState(() {
+      _results = hotels;
+      _isLoading = false;
+    });
+  }
+
+  // ─────────────────────────────────────
+  // DISPOSE
+  // ─────────────────────────────────────
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
+  // ─────────────────────────────────────
+  // UI
+  // ─────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final hotels = _filterHotels();
-
     return Scaffold(
       backgroundColor: Colors.white,
 
+      // ───────────── APPBAR ─────────────
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -79,46 +94,29 @@ class _HotelSearchPageState extends State<HotelSearchPage> {
         centerTitle: true,
       ),
 
+      // ───────────── BODY ─────────────
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔍 Barre de recherche
+          // 🔎 SearchBar unifiée (design Home)
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (v) => setState(() => searchQuery = v),
-                decoration: InputDecoration(
-                  hintText: "Rechercher un hôtel...",
-                  prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  suffixIcon: searchQuery.isNotEmpty
-                      ? IconButton(
-                    icon: const Icon(Icons.clear, color: Colors.grey),
-                    onPressed: () {
-                      setState(() {
-                        searchQuery = '';
-                        _searchController.clear();
-                      });
-                    },
-                  )
-                      : null,
-                ),
-              ),
+            padding: const EdgeInsets.all(16),
+            child: SearchBarWidget(
+              controller: _searchController,
+              hintText: 'Rechercher un hôtel...',
+              onChanged: (value) {
+                searchQuery = value;
+                _refreshHotels();
+              },
+              onClear: () {
+                _searchController.clear();
+                searchQuery = '';
+                _refreshHotels();
+              },
             ),
           ),
 
-          // 🎯 Filtres avec FilterChipWidget
+          // 🎯 Filtres
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -127,7 +125,10 @@ class _HotelSearchPageState extends State<HotelSearchPage> {
                   child: FilterChipWidget(
                     label: 'Étoiles',
                     isSelected: selectedFilter == 'Étoiles',
-                    onTap: () => setState(() => selectedFilter = 'Étoiles'),
+                    onTap: () {
+                      selectedFilter = 'Étoiles';
+                      _refreshHotels();
+                    },
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -135,7 +136,10 @@ class _HotelSearchPageState extends State<HotelSearchPage> {
                   child: FilterChipWidget(
                     label: 'Prix',
                     isSelected: selectedFilter == 'Prix',
-                    onTap: () => setState(() => selectedFilter = 'Prix'),
+                    onTap: () {
+                      selectedFilter = 'Prix';
+                      _refreshHotels();
+                    },
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -143,7 +147,10 @@ class _HotelSearchPageState extends State<HotelSearchPage> {
                   child: FilterChipWidget(
                     label: 'Popularité',
                     isSelected: selectedFilter == 'Popularité',
-                    onTap: () => setState(() => selectedFilter = 'Popularité'),
+                    onTap: () {
+                      selectedFilter = 'Popularité';
+                      _refreshHotels();
+                    },
                   ),
                 ),
               ],
@@ -152,14 +159,14 @@ class _HotelSearchPageState extends State<HotelSearchPage> {
 
           const SizedBox(height: 20),
 
-          // Titre + nombre de résultats
+          // 🔸 Titre + compteur
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  "Résultats",
+                  'Résultats',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
@@ -167,7 +174,7 @@ class _HotelSearchPageState extends State<HotelSearchPage> {
                   ),
                 ),
                 Text(
-                  '${hotels.length} hôtels',
+                  '${_results.length} hôtels',
                   style: TextStyle(color: Colors.grey[500]),
                 ),
               ],
@@ -176,16 +183,25 @@ class _HotelSearchPageState extends State<HotelSearchPage> {
 
           const SizedBox(height: 16),
 
-          // LISTE DES HÔTELS — en utilisant DestinationCard 🔥
+          // ───────────── CONTENU ─────────────
           Expanded(
-            child: ListView.builder(
+            child: _isLoading
+                ? const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF00897B),
+              ),
+            )
+                : _results.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: hotels.length,
+              itemCount: _results.length,
               itemBuilder: (context, index) {
-                final hotel = hotels[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: DestinationCard(destination: hotel), // 👈🔥 SIMPLE, PROPRE
+                  child: DestinationCard(
+                    destination: _results[index],
+                  ),
                 );
               },
             ),
@@ -194,6 +210,25 @@ class _HotelSearchPageState extends State<HotelSearchPage> {
       ),
 
       bottomNavigationBar: const BottomNavBar(currentIndex: 1),
+    );
+  }
+
+  // ─────────────────────────────────────
+  // EMPTY STATE
+  // ─────────────────────────────────────
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'Aucun hôtel trouvé',
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          ),
+        ],
+      ),
     );
   }
 }

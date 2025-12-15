@@ -15,36 +15,8 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.white,
 
-      // ──────────────── APPBAR ────────────────
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A3A52)),
-          onPressed: () => context.go('/home'),
-        ),
-
-        title: const Text(
-          'Profil',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1A3A52),
-          ),
-        ),
-
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(
-              Icons.more_vert,
-              color: Color(0xFF1A3A52),
-            ),
-          ),
-        ],
-      ),
+      // 🔹 APPBAR
+      appBar: const _ProfileAppBar(),
 
       // ──────────────── BODY ────────────────
       body: Center(
@@ -52,43 +24,17 @@ class ProfileScreen extends ConsumerWidget {
           children: <Widget>[
             const SizedBox(height: 20),
 
-            // Infos utilisateur
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 40,
-                    backgroundImage: NetworkImage(
-                      'https://images.unsplash.com/photo-1544005313-94ddf0286df2',
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Alexandre Dupont',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'alex.dupont@example.com',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            // 🔹 INFOS UTILISATEUR (extrait)
+            const _UserInfoSection(),
 
             const SizedBox(height: 40),
 
             // ──────────────── Bouton MODIFIER PROFIL ────────────────
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 8.0,
+              ),
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD4F0EC),
@@ -115,7 +61,10 @@ class ProfileScreen extends ConsumerWidget {
 
             // ──────────────── Bouton DECONNEXION ────────────────
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 8.0,
+              ),
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFFEBEE),
@@ -134,13 +83,10 @@ class ProfileScreen extends ConsumerWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-
                 onPressed: () {
                   // 👉 Déconnexion via Riverpod
                   ref.read(authProvider.notifier).state = false;
-
-                  // 👉 Redirection vers login
-                  //context.go('/login');
+                  // Redirection gérée automatiquement par le router
                 },
               ),
             ),
@@ -150,6 +96,94 @@ class ProfileScreen extends ConsumerWidget {
 
       // ──────────────── BOTTOM NAV ────────────────
       bottomNavigationBar: const BottomNavBar(currentIndex: 3),
+    );
+  }
+}
+
+/// ============================
+/// AppBar Profil
+/// ============================
+class _ProfileAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  const _ProfileAppBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: true,
+
+      leading: IconButton(
+        icon: const Icon(
+          Icons.arrow_back,
+          color: Color(0xFF1A3A52),
+        ),
+        onPressed: () => context.go('/home'),
+      ),
+
+      title: const Text(
+        'Profil',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1A3A52),
+        ),
+      ),
+
+      actions: const [
+        Padding(
+          padding: EdgeInsets.only(right: 16),
+          child: Icon(
+            Icons.more_vert,
+            color: Color(0xFF1A3A52),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+/// ============================
+/// Section Infos Utilisateur
+/// ============================
+class _UserInfoSection extends StatelessWidget {
+  const _UserInfoSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 40,
+            backgroundImage: NetworkImage(
+              'https://images.unsplash.com/photo-1544005313-94ddf0286df2',
+            ),
+          ),
+          const SizedBox(width: 15),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'Alexandre Dupont',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'alex.dupont@example.com',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

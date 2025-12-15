@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import '../data/notification_data.dart';
 import '../widgets/notification_header.dart';
 import '../widgets/notification_item.dart';
-
-// Importation de GoRouter pour avoir accès aux fonctionnalités de navigation
-// comme context.go() si on voulait ajouter un lien vers une page d'inscription par exemple.
-import 'package:go_router/go_router.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -15,7 +13,6 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
-
   @override
   Widget build(BuildContext context) {
     final notifications = NotificationData.notifications;
@@ -23,38 +20,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-
-        // 🔹 Retour à l’accueil
-        leading: TextButton(
-          onPressed: () {
-            context.go('/home'); // redirection vers Home
-          },
-          child: Text(
-            'Accueil',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        leadingWidth: 90,
-
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1A3A52),
-          ),
-        ),
-      ),
-
+      appBar: const _NotificationAppBar(),
       body: Column(
         children: [
           NotificationHeader(
@@ -67,7 +33,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
               });
             },
           ),
-
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -81,4 +46,49 @@ class _NotificationScreenState extends State<NotificationScreen> {
       ),
     );
   }
+}
+
+/// ============================
+/// AppBar Notifications
+/// ============================
+class _NotificationAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  const _NotificationAppBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: true,
+
+      // 🔹 Retour à l’accueil
+      leading: TextButton(
+        onPressed: () {
+          context.go('/home');
+        },
+        child: Text(
+          'Accueil',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+      leadingWidth: 90,
+
+      title: const Text(
+        'Notifications',
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1A3A52),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

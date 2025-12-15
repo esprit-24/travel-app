@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/trip_card.dart';
 import '../widgets/filter_chip_widget.dart';
+import '../widgets/search_bar_widget.dart';
+
 import '../models/trip_model.dart';
 import '../data/trips_data.dart';
+import '../services/trip_search_service.dart';
 
 class TripsPage extends StatefulWidget {
   const TripsPage({super.key});
@@ -15,37 +18,76 @@ class TripsPage extends StatefulWidget {
 }
 
 class _TripsPageState extends State<TripsPage> {
-
+  // ─────────────────────────────────────
+  // ÉTATS
+  // ─────────────────────────────────────
   String selectedFilter = 'Disponibles';
-  String searchQuery = "";
+  String searchQuery = '';
+
   final TextEditingController _searchController = TextEditingController();
 
-  // 🔎 Fonction recherche
-  List<Trip> _getFilteredTrips() {
-    return TripsData.trips.where((trip) {
-      final q = searchQuery.toLowerCase();
-      return trip.title.toLowerCase().contains(q) ||
-          trip.country.toLowerCase().contains(q);
-    }).toList();
+  bool _isLoading = false;
+  List<Trip> _results = [];
+
+  // ─────────────────────────────────────
+  // INIT
+  // ─────────────────────────────────────
+  @override
+  void initState() {
+    super.initState();
+    _refreshTrips(); // chargement initial
   }
 
+  // ─────────────────────────────────────
+  // LOGIQUE ASYNCHRONE (SIMULÉE)
+  // ─────────────────────────────────────
+  Future<void> _refreshTrips() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // ⏳ Simulation d’un appel réseau / base de données
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    final filteredTrips = TripSearchService.filterTrips(
+      trips: TripsData.trips,
+      searchQuery: searchQuery,
+    );
+
+    setState(() {
+      _results = filteredTrips;
+      _isLoading = false;
+    });
+  }
+
+  // ─────────────────────────────────────
+  // DISPOSE
+  // ─────────────────────────────────────
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // ─────────────────────────────────────
+  // UI
+  // ─────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final trips = _getFilteredTrips();
-
     return Scaffold(
       backgroundColor: Colors.white,
 
+      // ───────────── APPBAR ─────────────
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => context.go('/home'),
         ),
-        centerTitle: true,
         title: const Text(
-          "Voyages",
+          'Voyages',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -58,42 +100,29 @@ class _TripsPageState extends State<TripsPage> {
         ],
       ),
 
+      // ───────────── BODY ─────────────
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-
-            // 🔎 Recherche
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.search),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (value) {
-                        setState(() => searchQuery = value);
-                      },
-                      decoration: const InputDecoration(
-                        hintText: "Rechercher un voyage...",
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  const Icon(Icons.calendar_today_outlined),
-                ],
-              ),
+            // 🔎 SearchBar réutilisable
+            SearchBarWidget(
+              controller: _searchController,
+              hintText: 'Rechercher un voyage...',
+              onChanged: (value) {
+                searchQuery = value;
+                _refreshTrips();
+              },
+              onClear: () {
+                _searchController.clear();
+                searchQuery = '';
+                _refreshTrips();
+              },
             ),
 
             const SizedBox(height: 15),
 
-            // 🔥 Chip "Disponibles"
+            // 🔥 Filtre "Disponibles"
             Align(
               alignment: Alignment.centerLeft,
               child: SizedBox(
@@ -101,27 +130,37 @@ class _TripsPageState extends State<TripsPage> {
                 child: FilterChipWidget(
                   label: 'Disponibles',
                   isSelected: selectedFilter == 'Disponibles',
-                  onTap: () => setState(() => selectedFilter = 'Disponibles'),
+                  onTap: () {
+                    selectedFilter = 'Disponibles';
+                    _refreshTrips();
+                  },
                 ),
               ),
             ),
 
             const SizedBox(height: 15),
 
-            // LISTE DES VOYAGES
+            // ───────────── CONTENU ─────────────
             Expanded(
-              child: trips.isEmpty
+              child: _isLoading
+                  ? const Center(
+                child: CircularProgressIndicator(),
+              )
+                  : _results.isEmpty
                   ? Center(
                 child: Text(
-                  "Aucun voyage trouvé",
+                  'Aucun voyage trouvé',
                   style: TextStyle(color: Colors.grey[600]),
                 ),
               )
                   : ListView.builder(
-                itemCount: trips.length,
+                itemCount: _results.length,
                 itemBuilder: (context, index) {
-                  final Trip t = trips[index];
-                  return TripCard(trip: t, onTap: () {});
+                  final Trip trip = _results[index];
+                  return TripCard(
+                    trip: trip,
+                    onTap: () {},
+                  );
                 },
               ),
             ),
@@ -129,6 +168,7 @@ class _TripsPageState extends State<TripsPage> {
         ),
       ),
 
+      // ───────────── BOTTOM NAV ─────────────
       bottomNavigationBar: const BottomNavBar(currentIndex: 2),
     );
   }

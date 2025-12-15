@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../widgets/app_text_field.dart';
+
 class EditProfileScreen extends StatelessWidget {
   const EditProfileScreen({super.key});
 
@@ -9,26 +11,8 @@ class EditProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
 
-      // ─────────────────────────────────────
-      // APPBAR AVEC FLECHE RETOUR
-      // ─────────────────────────────────────
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A3A52)),
-          onPressed: () => context.go('/profil'),
-        ),
-        title: const Text(
-          'Modifier profil',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1A3A52),
-          ),
-        ),
-      ),
+      // 🔹 APPBAR
+      appBar: const _EditProfileAppBar(),
 
       // ─────────────────────────────────────
       // BODY
@@ -36,122 +20,150 @@ class EditProfileScreen extends StatelessWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
-          children: [
-            const SizedBox(height: 10),
+          children: const [
+            SizedBox(height: 10),
 
             // Avatar
-            const CircleAvatar(
+            CircleAvatar(
               radius: 50,
               backgroundImage: NetworkImage(
                 'https://images.unsplash.com/photo-1544005313-94ddf0286df2',
               ),
             ),
 
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
-            // Champs nom / prénom / email / phone / pwd
-            _buildTextField("Nom", "Dupont"),
-            _buildTextField("Prénom", "Alexandre"),
-            _buildTextField("Email", "alex.dupont@example.com"),
-            _buildTextField("Numéro de téléphone", "+33 6 12 34 56 78"),
-            _buildTextField("Mot de passe", "********", obscureText: true),
+            // Champs profil (widget commun)
+            AppTextField(
+              label: 'Nom',
+              hintText: 'Dupont',
+              initialValue: 'Dupont',
+            ),
+            AppTextField(
+              label: 'Prénom',
+              hintText: 'Alexandre',
+              initialValue: 'Alexandre',
+            ),
+            AppTextField(
+              label: 'Email',
+              hintText: 'alex.dupont@example.com',
+              initialValue: 'alex.dupont@example.com',
+              keyboardType: TextInputType.emailAddress,
+            ),
+            AppTextField(
+              label: 'Numéro de téléphone',
+              hintText: '+33 6 12 34 56 78',
+              initialValue: '+33 6 12 34 56 78',
+              keyboardType: TextInputType.phone,
+            ),
+            AppTextField(
+              label: 'Mot de passe',
+              hintText: '••••••••',
+              initialValue: '********',
+              obscureText: true,
+            ),
 
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
             // 🟩 BOUTON ENREGISTRER
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () => context.go('/profil'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD4F0EC),
-                  foregroundColor: const Color(0xFF00897B),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  "Enregistrer les modifications",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
+            _SaveProfileButton(),
 
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
             // Bouton ANNULER
-            TextButton(
-              onPressed: () => context.go('/profil'),
-              child: Text(
-                "Annuler",
-                style: TextStyle(fontSize: 15, color: Colors.grey.shade500),
-              ),
-            ),
+            _CancelButton(),
           ],
         ),
       ),
     );
   }
+}
 
-  // ─────────────────────────────────────
-  // TEXTFIELD RÉUTILISABLE (style Register)
-  // ─────────────────────────────────────
-  Widget _buildTextField(
-      String label,
-      String initialValue, {
-        bool obscureText = false,
-      }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Label
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
+/// ============================
+/// Bouton Enregistrer
+/// ============================
+class _SaveProfileButton extends StatelessWidget {
+  const _SaveProfileButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: () => context.go('/profil'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFD4F0EC),
+          foregroundColor: const Color(0xFF00897B),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-
-          const SizedBox(height: 8),
-
-          // TextField
-          TextFormField(
-            initialValue: initialValue,
-            obscureText: obscureText,
-            decoration: InputDecoration(
-              hintText: label,
-              hintStyle: TextStyle(color: Colors.grey.shade500),
-              filled: true,
-              fillColor: Colors.grey.shade50,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: Color(0xFF00897B),
-                  width: 2,
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-            ),
+        ),
+        child: const Text(
+          "Enregistrer les modifications",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
-        ],
+        ),
       ),
     );
   }
+}
+
+/// ============================
+/// Bouton Annuler
+/// ============================
+class _CancelButton extends StatelessWidget {
+  const _CancelButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () => context.go('/profil'),
+      child: Text(
+        "Annuler",
+        style: TextStyle(
+          fontSize: 15,
+          color: Colors.grey,
+        ),
+      ),
+    );
+  }
+}
+
+/// ============================
+/// AppBar Modifier Profil
+/// ============================
+class _EditProfileAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  const _EditProfileAppBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: true,
+      leading: IconButton(
+        icon: const Icon(
+          Icons.arrow_back,
+          color: Color(0xFF1A3A52),
+        ),
+        onPressed: () => context.go('/profil'),
+      ),
+      title: const Text(
+        'Modifier profil',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1A3A52),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
