@@ -25,10 +25,7 @@ class WeatherDayItem extends StatelessWidget {
         color: isSelected ? const Color(0xFF00897B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 8),
         ],
       ),
       child: Column(
@@ -41,9 +38,11 @@ class WeatherDayItem extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Icon(icon,
-              size: 32,
-              color: isSelected ? Colors.white : const Color(0xFF00897B)),
+          Icon(
+            icon,
+            size: 32,
+            color: isSelected ? Colors.white : const Color(0xFF00897B),
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -59,8 +58,7 @@ class WeatherDayItem extends StatelessWidget {
                 Text(
                   " / $tempLow",
                   style: TextStyle(
-                    color:
-                    isSelected ? Colors.white70 : Colors.grey.shade400,
+                    color: isSelected ? Colors.white70 : Colors.grey.shade400,
                   ),
                 ),
             ],

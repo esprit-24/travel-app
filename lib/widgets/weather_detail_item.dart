@@ -22,10 +22,7 @@ class WeatherDetailItem extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: Colors.grey.withValues(alpha: 0.08), blurRadius: 8),
         ],
       ),
       child: Column(
