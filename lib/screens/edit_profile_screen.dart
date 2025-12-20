@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../providers/user_provider.dart';
 import '../services/auth_service.dart';
 import '../models/app_user.dart';
+import '../config/api_config.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -19,8 +20,8 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final ImagePicker _picker = ImagePicker();
 
-  File? _newPhotoFile;        // mobile
-  Uint8List? _newPhotoBytes;  // web
+  File? _newPhotoFile;        // Mobile
+  Uint8List? _newPhotoBytes;  // Web
 
   late TextEditingController firstNameCtrl;
   late TextEditingController lastNameCtrl;
@@ -39,7 +40,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
-  // 📸 Choisir photo (mobile + web)
+  // ============================================================
+  // 📸 Sélection photo (Web + Mobile)
+  // ============================================================
   Future<void> _pickPhoto() async {
     final XFile? file =
     await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
@@ -47,36 +50,40 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (file == null) return;
 
     if (kIsWeb) {
-      // WEB
       final bytes = await file.readAsBytes();
       setState(() {
         _newPhotoBytes = bytes;
+        _newPhotoFile = null;
       });
     } else {
-      // MOBILE
       setState(() {
         _newPhotoFile = File(file.path);
+        _newPhotoBytes = null;
       });
     }
   }
 
-  // 🟦 Enregistrer modifications
+  // ============================================================
+  // 💾 Sauvegarde profil
+  // ============================================================
   Future<void> _saveChanges(AppUser oldUser) async {
     setState(() => isSaving = true);
 
-    // 1) Upload photo si sélectionnée
-    String? newPhotoUrl = oldUser.photoUrl;
+    String? newPhotoPath = oldUser.photoUrl;
 
+    // 1️⃣ Upload photo si modifiée
     if (_newPhotoFile != null || _newPhotoBytes != null) {
-      final uploaded = await AuthService.instance.uploadPhoto(
+      final uploadedPath = await AuthService.instance.uploadPhoto(
         oldUser.uid,
         kIsWeb ? _newPhotoBytes! : _newPhotoFile!,
       );
 
-      if (uploaded != null) newPhotoUrl = uploaded;
+      if (uploadedPath != null) {
+        newPhotoPath = uploadedPath; // chemin relatif : upload/...
+      }
     }
 
-    // 2) User mis à jour
+    // 2️⃣ User mis à jour
     final updatedUser = AppUser(
       uid: oldUser.uid,
       email: oldUser.email,
@@ -84,13 +91,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       firstName: firstNameCtrl.text.trim(),
       lastName: lastNameCtrl.text.trim(),
       phone: phoneCtrl.text.trim(),
-      photoUrl: newPhotoUrl,
+      photoUrl: newPhotoPath,
     );
 
-    // 3) API update
+    // 3️⃣ API update
     await AuthService.instance.updateUserInApi(updatedUser);
 
-    // 4) Mise à jour provider
+    // 4️⃣ Rafraîchir le provider
     ref.invalidate(userProvider);
 
     if (mounted) context.go('/profil');
@@ -119,14 +126,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
         ),
       ),
-
       body: userAsync.when(
-        loading: () =>
-        const Center(child: CircularProgressIndicator(color: Color(0xFF00897B))),
-
-        error: (err, _) =>
-            Center(child: Text("Erreur : $err", style: const TextStyle(color: Colors.red))),
-
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Color(0xFF00897B)),
+        ),
+        error: (err, _) => Center(
+          child: Text("Erreur : $err", style: const TextStyle(color: Colors.red)),
+        ),
         data: (user) {
           if (user == null) {
             return const Center(child: Text("Utilisateur introuvable."));
@@ -140,19 +146,34 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             isInitialized = true;
           }
 
-          // ANTICACHE photo actuelle
-          final photoUrl = (user.photoUrl != null)
-              ? "${user.photoUrl}?v=${DateTime.now().millisecondsSinceEpoch}"
-              : "https://images.unsplash.com/photo-1544005313-94ddf0286df2";
+          // ====================================================
+          // 🖼️ Construction URL image distante (chemin relatif)
+          // ====================================================
+          String? resolvedPhotoUrl;
+          if (user.photoUrl != null && user.photoUrl!.isNotEmpty) {
+            final baseImageUrl =
+            ApiConfig.baseUrl.replaceAll('/index.php', '');
+            resolvedPhotoUrl =
+            "$baseImageUrl/${user.photoUrl}?v=${DateTime.now().millisecondsSinceEpoch}";
+          }
 
           ImageProvider avatarImage;
 
+          // 1️⃣ Image locale (avant sauvegarde)
           if (_newPhotoFile != null) {
             avatarImage = FileImage(_newPhotoFile!);
           } else if (_newPhotoBytes != null) {
             avatarImage = MemoryImage(_newPhotoBytes!);
-          } else {
-            avatarImage = NetworkImage(photoUrl);
+          }
+          // 2️⃣ Image distante (après sauvegarde)
+          else if (resolvedPhotoUrl != null) {
+            avatarImage = NetworkImage(resolvedPhotoUrl);
+          }
+          // 3️⃣ Fallback
+          else {
+            avatarImage = const NetworkImage(
+              "https://images.unsplash.com/photo-1544005313-94ddf0286df2",
+            );
           }
 
           return SingleChildScrollView(
@@ -174,9 +195,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
 
                 const SizedBox(height: 10),
-
-                Text("Changer la photo", style: TextStyle(color: Colors.grey.shade600)),
-
+                Text("Changer la photo",
+                    style: TextStyle(color: Colors.grey.shade600)),
                 const SizedBox(height: 20),
 
                 _buildField("Nom", firstNameCtrl),
@@ -186,7 +206,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
                 const SizedBox(height: 20),
 
-                // 🟩 Enregistrer
+                // 💾 Enregistrer
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -201,9 +221,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ),
                     ),
                     child: isSaving
-                        ? const CircularProgressIndicator(color: Color(0xFF00897B))
-                        : const Text("Enregistrer les modifications",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                        ? const CircularProgressIndicator(
+                        color: Color(0xFF00897B))
+                        : const Text(
+                      "Enregistrer les modifications",
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
 
@@ -211,8 +235,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
                 TextButton(
                   onPressed: () => context.go('/profil'),
-                  child: Text("Annuler",
-                      style: TextStyle(fontSize: 15, color: Colors.grey.shade500)),
+                  child: Text(
+                    "Annuler",
+                    style:
+                    TextStyle(fontSize: 15, color: Colors.grey.shade500),
+                  ),
                 ),
               ],
             ),
@@ -222,6 +249,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
+  // ============================================================
+  // 🧩 UI helpers
+  // ============================================================
   Widget _buildField(
       String label,
       TextEditingController controller, {
@@ -232,11 +262,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           const SizedBox(height: 8),
           TextField(
             controller: controller,
@@ -252,8 +285,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.grey.shade300),
               ),
-              contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
           ),
         ],
@@ -262,36 +297,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildAvatarImage(ImageProvider imageProvider) {
-    if (imageProvider is FileImage || imageProvider is MemoryImage) {
-      return Image(
-        image: imageProvider,
-        width: 100,
-        height: 100,
-        fit: BoxFit.cover,
-      );
-    }
-
-    if (imageProvider is NetworkImage) {
-      return Image.network(
-        imageProvider.url,
-        width: 100,
-        height: 100,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) {
-          return const Icon(
-            Icons.person,
-            size: 50,
-            color: Colors.grey,
-          );
-        },
-      );
-    }
-
-    return const Icon(
-      Icons.person,
-      size: 50,
-      color: Colors.grey,
+    return Image(
+      image: imageProvider,
+      width: 100,
+      height: 100,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) {
+        return const Icon(
+          Icons.person,
+          size: 50,
+          color: Colors.grey,
+        );
+      },
     );
   }
-
 }

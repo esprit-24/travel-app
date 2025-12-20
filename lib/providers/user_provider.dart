@@ -1,20 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/auth_service.dart';
-import '../models/app_user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// 🔥 Stream Firebase → donne l’utilisateur Firebase en temps réel
+import '../services/auth_service.dart';
+import '../models/app_user.dart';
+
+/// 🔥 Stream Firebase → donne l’utilisateur Firebase en temps réel
 final firebaseAuthProvider = StreamProvider<User?>((ref) {
   return FirebaseAuth.instance.authStateChanges();
 });
 
-// 🔥 userProvider = AppUser backend + refresh automatique
+/// 🔥 userProvider = AppUser backend
+/// ⚠️ Correction importante :
+/// On attend que Firebase ait fini de charger AVANT d’appeler l’API
 final userProvider = FutureProvider<AppUser?>((ref) async {
-  // 1) On écoute firebaseAuthProvider
-  final firebaseUser = ref.watch(firebaseAuthProvider).value;
+  final firebaseAuthAsync = ref.watch(firebaseAuthProvider);
 
-  if (firebaseUser == null) return null; // Déconnecté
+  // ⏳ Firebase est encore en cours d'initialisation
+  if (firebaseAuthAsync.isLoading) {
+    return null;
+  }
 
-  // 2) On récupère le user depuis ton API
+  final firebaseUser = firebaseAuthAsync.value;
+
+  // ❌ Utilisateur non connecté
+  if (firebaseUser == null) {
+    return null;
+  }
+
+  // ✅ Utilisateur Firebase prêt → appel API backend
   return await AuthService.instance.getUserFromApi(firebaseUser.uid);
 });

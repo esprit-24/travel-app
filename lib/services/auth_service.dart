@@ -16,14 +16,14 @@ import '../config/api_config.dart';
 /// - Compatible : Web / Android Emulator / Android réel
 /// ===============================================================
 class AuthService {
-  /// Singleton (une seule instance dans toute l’app)
+  /// Singleton
   AuthService._privateConstructor();
   static final AuthService instance = AuthService._privateConstructor();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // ===============================================================
-  // 🔵 INSCRIPTION (Firebase + API + Upload photo)
+  // 🔵 INSCRIPTION
   // ===============================================================
   Future<AppUser> signUpWithEmail({
     required String firstName,
@@ -31,18 +31,10 @@ class AuthService {
     required String email,
     required String password,
     required String phone,
-
-    // Mobile
     File? photoFile,
-
-    // Web
     Uint8List? webImageBytes,
-
     String role = "user",
   }) async {
-    // ---------------------------
-    // 1️⃣ Création Firebase
-    // ---------------------------
     final userCred = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
@@ -50,9 +42,6 @@ class AuthService {
 
     final uid = userCred.user!.uid;
 
-    // ---------------------------
-    // 2️⃣ Création utilisateur local
-    // ---------------------------
     final newUser = AppUser(
       uid: uid,
       firstName: firstName,
@@ -63,29 +52,20 @@ class AuthService {
       photoUrl: null,
     );
 
-    // ---------------------------
-    // 3️⃣ Création côté API PHP
-    // ---------------------------
     final created = await _createUserInApi(newUser);
     if (!created) {
       throw Exception("Erreur API lors de la création utilisateur.");
     }
 
-    // ---------------------------
-    // 4️⃣ Upload photo (si fournie)
-    // ---------------------------
-    String? uploadedPhotoUrl;
+    String? uploadedPhotoPath;
 
     if (kIsWeb && webImageBytes != null) {
-      uploadedPhotoUrl = await _uploadPhotoWeb(uid, webImageBytes);
+      uploadedPhotoPath = await _uploadPhotoWeb(uid, webImageBytes);
     } else if (!kIsWeb && photoFile != null) {
-      uploadedPhotoUrl = await _uploadPhotoMobile(uid, photoFile);
+      uploadedPhotoPath = await _uploadPhotoMobile(uid, photoFile);
     }
 
-    // ---------------------------
-    // 5️⃣ Retour utilisateur final
-    // ---------------------------
-    return newUser.copyWith(photoUrl: uploadedPhotoUrl);
+    return newUser.copyWith(photoUrl: uploadedPhotoPath);
   }
 
   // ===============================================================
@@ -94,22 +74,18 @@ class AuthService {
   Future<bool> _createUserInApi(AppUser user) async {
     final url = Uri.parse("${ApiConfig.baseUrl}/users/create");
 
-    final body = {
-      "uid": user.uid,
-      "firstName": user.firstName,
-      "lastName": user.lastName,
-      "email": user.email,
-      "phone": user.phone,
-      "photoUrl": user.photoUrl,
-      "role": user.role,
-    };
-
     final response = await http.post(
       url,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode(body),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "uid": user.uid,
+        "firstName": user.firstName,
+        "lastName": user.lastName,
+        "email": user.email,
+        "phone": user.phone,
+        "photoUrl": user.photoUrl,
+        "role": user.role,
+      }),
     );
 
     return response.statusCode == 201;
@@ -121,20 +97,17 @@ class AuthService {
   Future<String?> _uploadPhotoMobile(String uid, File file) async {
     final url = Uri.parse("${ApiConfig.baseUrl}/users/upload-photo");
 
-    final request = http.MultipartRequest("POST", url);
-    request.fields["uid"] = uid;
-
-    request.files.add(
-      await http.MultipartFile.fromPath("photo", file.path),
-    );
+    final request = http.MultipartRequest("POST", url)
+      ..fields["uid"] = uid
+      ..files.add(await http.MultipartFile.fromPath("photo", file.path));
 
     final response = await request.send();
     final body = await response.stream.bytesToString();
 
     if (response.statusCode == 200) {
-      return jsonDecode(body)["photoUrl"];
+      // ✅ CORRECTION ICI
+      return jsonDecode(body)["photoPath"];
     }
-
     return null;
   }
 
@@ -144,24 +117,23 @@ class AuthService {
   Future<String?> _uploadPhotoWeb(String uid, Uint8List bytes) async {
     final url = Uri.parse("${ApiConfig.baseUrl}/users/upload-photo");
 
-    final request = http.MultipartRequest("POST", url);
-    request.fields["uid"] = uid;
-
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        "photo",
-        bytes,
-        filename: "${uid}_profile.jpg",
-      ),
-    );
+    final request = http.MultipartRequest("POST", url)
+      ..fields["uid"] = uid
+      ..files.add(
+        http.MultipartFile.fromBytes(
+          "photo",
+          bytes,
+          filename: "${uid}_profile.jpg",
+        ),
+      );
 
     final response = await request.send();
     final body = await response.stream.bytesToString();
 
     if (response.statusCode == 200) {
-      return jsonDecode(body)["photoUrl"];
+      // ✅ CORRECTION ICI
+      return jsonDecode(body)["photoPath"];
     }
-
     return null;
   }
 
@@ -171,8 +143,8 @@ class AuthService {
   Future<String?> uploadPhoto(String uid, dynamic fileOrBytes) async {
     final url = Uri.parse("${ApiConfig.baseUrl}/users/upload-photo");
 
-    final request = http.MultipartRequest("POST", url);
-    request.fields["uid"] = uid;
+    final request = http.MultipartRequest("POST", url)
+      ..fields["uid"] = uid;
 
     if (kIsWeb) {
       request.files.add(
@@ -194,9 +166,11 @@ class AuthService {
     final response = await request.send();
     final body = await response.stream.bytesToString();
 
-    if (response.statusCode != 200) return null;
-
-    return jsonDecode(body)["photoUrl"];
+    if (response.statusCode == 200) {
+      // ✅ CORRECTION ICI
+      return jsonDecode(body)["photoPath"];
+    }
+    return null;
   }
 
   // ===============================================================
@@ -207,9 +181,7 @@ class AuthService {
 
     final response = await http.put(
       url,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "uid": user.uid,
         "first_name": user.firstName,
@@ -229,25 +201,19 @@ class AuthService {
     final url = Uri.parse("${ApiConfig.baseUrl}/users/get?uid=$uid");
 
     final response = await http.get(url);
-
     if (response.statusCode != 200) return null;
 
-    final data = jsonDecode(response.body);
-    return AppUser.fromJson(data);
+    return AppUser.fromJson(jsonDecode(response.body));
   }
 
   // ===============================================================
-  // 🔵 Firebase Auth helpers
+  // 🔵 Firebase helpers
   // ===============================================================
   Future<UserCredential> signInWithEmail({
     required String email,
     required String password,
-  }) {
-    return _auth.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-  }
+  }) =>
+      _auth.signInWithEmailAndPassword(email: email, password: password);
 
   Future<void> signOut() => _auth.signOut();
 

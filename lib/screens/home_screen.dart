@@ -9,6 +9,7 @@ import '../providers/user_provider.dart';
 import '../widgets/destination_card.dart';
 import '../widgets/filter_chip_widget.dart';
 import '../widgets/weather_card.dart';
+import '../config/api_config.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -60,13 +61,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              error: (err, _) => const Icon(Icons.error, color: Colors.red),
+              error: (err, _) =>
+              const Icon(Icons.error, color: Colors.red),
 
               data: (user) {
-                // Anti-cache si photoUrl existe
-                final photoUrl = (user != null && user.photoUrl != null)
-                    ? "${user.photoUrl}?v=${DateTime.now().millisecondsSinceEpoch}"
-                    : "https://images.unsplash.com/photo-1544005313-94ddf0286df2";
+                // ============================================================
+                // 🖼️ Construction URL image utilisateur (chemin relatif)
+                // ============================================================
+                String photoUrl;
+
+                if (user != null && user.photoUrl != null && user.photoUrl!.isNotEmpty) {
+                  final baseImageUrl =
+                  ApiConfig.baseUrl.replaceAll('/index.php', '');
+
+                  photoUrl =
+                  "$baseImageUrl/${user.photoUrl}?v=${DateTime.now().millisecondsSinceEpoch}";
+                } else {
+                  photoUrl =
+                  "https://images.unsplash.com/photo-1544005313-94ddf0286df2";
+                }
 
                 return GestureDetector(
                   onTap: () => context.go('/profil'),
@@ -154,10 +167,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: TextField(
                       decoration: InputDecoration(
-                        hintText: "Rechercher un vol, hôtel, destination...",
-                        hintStyle: TextStyle(color: Colors.grey.shade400),
-                        prefixIcon:
-                        Icon(Icons.search, color: Colors.grey.shade400),
+                        hintText:
+                        "Rechercher un vol, hôtel, destination...",
+                        hintStyle:
+                        TextStyle(color: Colors.grey.shade400),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.grey.shade400,
+                        ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20,
@@ -223,8 +240,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: List.generate(_topTwo.length, (index) {
                   return Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(right: index == 0 ? 16 : 0),
-                      child: DestinationCard(destination: _topTwo[index]),
+                      padding:
+                      EdgeInsets.only(right: index == 0 ? 16 : 0),
+                      child: DestinationCard(
+                        destination: _topTwo[index],
+                      ),
                     ),
                   );
                 }),

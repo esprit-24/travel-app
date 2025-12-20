@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/auth_service.dart';
 import '../providers/user_provider.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../config/api_config.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -58,7 +59,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
 
           error: (err, _) => Center(
-            child: Text("Erreur : $err", style: const TextStyle(color: Colors.red)),
+            child: Text(
+              "Erreur : $err",
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
 
           data: (user) {
@@ -66,10 +70,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               return const Center(child: Text("Utilisateur introuvable"));
             }
 
-            // Anti-cache photo
-            final photo = user.photoUrl != null
-                ? "${user.photoUrl}?v=${DateTime.now().millisecondsSinceEpoch}"
-                : "https://images.unsplash.com/photo-1544005313-94ddf0286df2";
+            // ============================================================
+            // 🖼️ Construction URL image (chemin relatif → URL complète)
+            // ============================================================
+            String photoUrl;
+
+            if (user.photoUrl != null && user.photoUrl!.isNotEmpty) {
+              final baseImageUrl =
+              ApiConfig.baseUrl.replaceAll('/index.php', '');
+
+              photoUrl =
+              "$baseImageUrl/${user.photoUrl}?v=${DateTime.now().millisecondsSinceEpoch}";
+            } else {
+              photoUrl =
+              "https://images.unsplash.com/photo-1544005313-94ddf0286df2";
+            }
 
             return Column(
               children: [
@@ -82,14 +97,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       CircleAvatar(
                         radius: 40,
                         backgroundColor: Colors.grey.shade300,
-                        child: photo.isNotEmpty
-                            ? ClipOval(
+                        child: ClipOval(
                           child: Image.network(
-                            photo,
+                            photoUrl,
                             width: 80,
                             height: 80,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
+                            errorBuilder: (_, __, ___) {
                               return const Icon(
                                 Icons.person,
                                 size: 40,
@@ -97,11 +111,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               );
                             },
                           ),
-                        )
-                            : const Icon(
-                          Icons.person,
-                          size: 40,
-                          color: Colors.grey,
                         ),
                       ),
 
@@ -119,7 +128,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                           Text(
                             user.email,
-                            style: const TextStyle(color: Colors.grey),
+                            style:
+                            const TextStyle(color: Colors.grey),
                           ),
                         ],
                       ),
@@ -136,7 +146,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       backgroundColor: const Color(0xFFD4F0EC),
                       minimumSize: const Size(double.infinity, 52),
                     ),
-                    icon: const Icon(Icons.edit, color: Color(0xFF00897B)),
+                    icon: const Icon(Icons.edit,
+                        color: Color(0xFF00897B)),
                     label: const Text(
                       "Modifier profil",
                       style: TextStyle(
@@ -160,7 +171,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       backgroundColor: const Color(0xFFFFEBEE),
                       minimumSize: const Size(double.infinity, 52),
                     ),
-                    icon: const Icon(Icons.logout, color: Color(0xFFD32F2F)),
+                    icon: const Icon(Icons.logout,
+                        color: Color(0xFFD32F2F)),
                     label: const Text(
                       "Se déconnecter",
                       style: TextStyle(
@@ -171,7 +183,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     onPressed: () async {
                       await AuthService.instance.signOut();
                       ref.invalidate(userProvider);
-                      if (context.mounted) context.go('/login');
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
                     },
                   ),
                 ),
