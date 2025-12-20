@@ -37,14 +37,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      await AuthService.instance.signInWithEmail(
+      // 1️⃣ Connexion Firebase
+      final credential = await AuthService.instance.signInWithEmail(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
+      final uid = credential.user!.uid;
+
+      // 2️⃣ Récupération utilisateur depuis le backend
+      final appUser = await AuthService.instance.getUserFromApi(uid);
+
+      if (appUser == null) {
+        setState(() {
+          _errorMessage = "Utilisateur introuvable.";
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // 3️⃣ Rafraîchir le provider
       ref.invalidate(userProvider);
 
-      if (mounted) context.go('/home'); // navigation automatique
+      // 4️⃣ Redirection selon le rôle
+      if (!mounted) return;
+
+      if (appUser.role == 'admin') {
+        context.go('/admin');
+      } else {
+        context.go('/home');
+      }
     } catch (e) {
       setState(() {
         _errorMessage = "Email ou mot de passe incorrect.";
@@ -52,6 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
