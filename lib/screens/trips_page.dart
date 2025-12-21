@@ -1,41 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/trip_card.dart';
 import '../widgets/filter_chip_widget.dart';
 import '../models/trip_model.dart';
-import '../data/trips_data.dart';
+import '../providers/trips_provider.dart';
 
-class TripsPage extends StatefulWidget {
+class TripsPage extends ConsumerStatefulWidget {
   const TripsPage({super.key});
 
   @override
-  State<TripsPage> createState() => _TripsPageState();
+  ConsumerState<TripsPage> createState() => _TripsPageState();
 }
 
-class _TripsPageState extends State<TripsPage> {
-
+class _TripsPageState extends ConsumerState<TripsPage> {
   String selectedFilter = 'Disponibles';
-  String searchQuery = "";
+  String searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
-  // 🔎 Fonction recherche
-  List<Trip> _getFilteredTrips() {
-    return TripsData.trips.where((trip) {
-      final q = searchQuery.toLowerCase();
+  // 🔎 Filtrage local (recherche texte)
+  List<Trip> _filterTrips(List<Trip> trips) {
+    if (searchQuery.isEmpty) return trips;
+
+    final q = searchQuery.toLowerCase();
+    return trips.where((trip) {
       return trip.title.toLowerCase().contains(q) ||
           trip.country.toLowerCase().contains(q);
     }).toList();
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final trips = _getFilteredTrips();
+    final tripsAsync = ref.watch(tripsProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
 
+      // --------------------------------------------------
+      // 🔹 APPBAR
+      // --------------------------------------------------
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -58,11 +69,13 @@ class _TripsPageState extends State<TripsPage> {
         ],
       ),
 
+      // --------------------------------------------------
+      // 🔹 BODY
+      // --------------------------------------------------
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-
             // 🔎 Recherche
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -93,7 +106,7 @@ class _TripsPageState extends State<TripsPage> {
 
             const SizedBox(height: 15),
 
-            // 🔥 Chip "Disponibles"
+            // 🔥 Filtre simple
             Align(
               alignment: Alignment.centerLeft,
               child: SizedBox(
@@ -101,27 +114,55 @@ class _TripsPageState extends State<TripsPage> {
                 child: FilterChipWidget(
                   label: 'Disponibles',
                   isSelected: selectedFilter == 'Disponibles',
-                  onTap: () => setState(() => selectedFilter = 'Disponibles'),
+                  onTap: () => setState(() {
+                    selectedFilter = 'Disponibles';
+                  }),
                 ),
               ),
             ),
 
             const SizedBox(height: 15),
 
-            // LISTE DES VOYAGES
+            // --------------------------------------------------
+            // 🔹 LISTE DES VOYAGES (API)
+            // --------------------------------------------------
             Expanded(
-              child: trips.isEmpty
-                  ? Center(
-                child: Text(
-                  "Aucun voyage trouvé",
-                  style: TextStyle(color: Colors.grey[600]),
+              child: tripsAsync.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(),
                 ),
-              )
-                  : ListView.builder(
-                itemCount: trips.length,
-                itemBuilder: (context, index) {
-                  final Trip t = trips[index];
-                  return TripCard(trip: t, onTap: () {});
+
+                error: (err, _) => Center(
+                  child: Text(
+                    "Erreur : $err",
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+
+                data: (List<Trip> trips) {
+                  final filteredTrips = _filterTrips(trips);
+
+                  if (filteredTrips.isEmpty) {
+                    return Center(
+                      child: Text(
+                        "Aucun voyage trouvé",
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: filteredTrips.length,
+                    itemBuilder: (context, index) {
+                      final trip = filteredTrips[index];
+                      return TripCard(
+                        trip: trip,
+                        onTap: () {
+                          // Détail voyage plus tard
+                        },
+                      );
+                    },
+                  );
                 },
               ),
             ),

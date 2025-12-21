@@ -1,9 +1,13 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travel_app/models/destination_model.dart';
+import 'package:travel_app/models/trip_model.dart';
 import 'package:travel_app/screens/admin/destinations/admin_add_destination_screen.dart';
 import 'package:travel_app/screens/admin/destinations/admin_destinations_list_screen.dart';
 import 'package:travel_app/screens/admin/destinations/admin_edit_destination_screen.dart';
+import 'package:travel_app/screens/admin/trips/admin_add_trip_screen.dart';
+import 'package:travel_app/screens/admin/trips/admin_edit_trip_screen.dart';
+import 'package:travel_app/screens/admin/trips/admin_trips_list_screen.dart';
 
 // 🔐 Provider Firebase : connecté / déconnecté
 import '../providers/auth_provider.dart';
@@ -148,6 +152,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final destination = state.extra as Destination;
           return AdminEditDestinationScreen(destination: destination);
+        },
+      ),
+
+      GoRoute(
+        path: '/admin/trips',
+        builder: (context, state) => const AdminTripsListScreen(),
+      ),
+
+      GoRoute(
+        path: '/admin/trips/add',
+        builder: (context, state) => const AdminAddTripScreen(),
+      ),
+
+      GoRoute(
+        path: '/admin/trips/edit',
+        builder: (context, state) {
+          final trip = state.extra as Trip;
+          return AdminEditTripScreen(trip: trip);
         },
       ),
 
