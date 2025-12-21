@@ -1,5 +1,9 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:travel_app/models/destination_model.dart';
+import 'package:travel_app/screens/admin/destinations/admin_add_destination_screen.dart';
+import 'package:travel_app/screens/admin/destinations/admin_destinations_list_screen.dart';
+import 'package:travel_app/screens/admin/destinations/admin_edit_destination_screen.dart';
 
 // 🔐 Provider Firebase : connecté / déconnecté
 import '../providers/auth_provider.dart';
@@ -23,7 +27,7 @@ import '../screens/trips_page.dart';
 import '../screens/weather_detail_screen.dart';
 
 // 🔹 Écran admin
-import '../screens/admin_dashboard_screen.dart';
+import '../screens/admin/admin_dashboard_screen.dart';
 
 /// ===============================================================
 /// 🌐 Router principal de l’application
@@ -126,29 +130,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 🛠️ ADMIN (PROTÉGÉ PAR RÔLE)
       GoRoute(
         path: '/admin',
-
-        /// 🔒 Protection par rôle (admin uniquement)
-        redirect: (context, state) {
-          final container = ProviderScope.containerOf(context);
-          final userAsync = container.read(userProvider);
-
-          // ⏳ En cours de chargement → ne rien faire
-          if (userAsync.isLoading) return null;
-
-          final user = userAsync.value;
-
-          // ❌ Pas connecté
-          if (user == null) return '/login';
-
-          // ❌ Pas admin
-          if (user.role != 'admin') return '/home';
-
-          // ✅ Admin → accès autorisé
-          return null;
-        },
-
         builder: (context, state) => const AdminDashboardScreen(),
       ),
+
+      GoRoute(
+        path: '/admin/destinations',
+        builder: (context, state) => const AdminDestinationsListScreen(),
+      ),
+
+      GoRoute(
+        path: '/admin/destinations/add',
+        builder: (context, state) => const AdminAddDestinationScreen(),
+      ),
+
+      GoRoute(
+        path: '/admin/destinations/edit',
+        builder: (context, state) {
+          final destination = state.extra as Destination;
+          return AdminEditDestinationScreen(destination: destination);
+        },
+      ),
+
     ],
   );
 });

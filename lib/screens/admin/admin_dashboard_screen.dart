@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../services/auth_service.dart';
+import '../../services/auth_service.dart';
 
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
@@ -16,10 +16,10 @@ class AdminDashboardScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
+        /*leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A3A52)),
           onPressed: () => context.go('/home'),
-        ),
+        ),*/
         title: const Text(
           'Dashboard Administrateur',
           style: TextStyle(
