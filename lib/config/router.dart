@@ -8,6 +8,7 @@ import 'package:travel_app/screens/admin/destinations/admin_edit_destination_scr
 import 'package:travel_app/screens/admin/trips/admin_add_trip_screen.dart';
 import 'package:travel_app/screens/admin/trips/admin_edit_trip_screen.dart';
 import 'package:travel_app/screens/admin/trips/admin_trips_list_screen.dart';
+import 'package:travel_app/screens/admin/users/admin_users_list_screen.dart';
 
 // 🔐 Provider Firebase : connecté / déconnecté
 import '../providers/auth_provider.dart';
@@ -171,6 +172,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           final trip = state.extra as Trip;
           return AdminEditTripScreen(trip: trip);
         },
+      ),
+
+      GoRoute(
+        path: '/admin/users',
+        builder: (context, state) => const AdminUsersListScreen(),
       ),
 
     ],
